@@ -1,0 +1,14 @@
+<div class="panel panel-primary" n:if="count($buildRequests)">
+	<div class="panel-heading">
+		<h3 class="panel-title">Poslední testovací sestavení</h3>
+	</div>
+	<div class="panel-body">
+		<dl>
+			{foreach $buildRequests as $buildRequest}
+				<dt><a href="{plink :DashBoard:BuildRequest:default $buildRequest->id}">{$buildRequest->repository->name}:{$buildRequest->branch} ({$buildRequest->commit|substr:0,8})</a></dt>
+				<dd><span n:class="glyphicon, ! $buildRequest->failed ? glyphicon-ok, $buildRequest->failed ? glyphicon-exclamation-sign" aria-hidden="true"></span></dd>
+				<dd>{$buildRequest->start|date}</dd>
+			{/foreach}
+		</dl>
+	</div>
+</div>

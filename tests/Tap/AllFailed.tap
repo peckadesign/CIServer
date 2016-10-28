@@ -1,0 +1,6 @@
+TAP version 13
+not ok public-repo/tests/FailedTest.phpt [method=testOne]
+not ok public-repo/tests/MixedTest.phpt [method=testOne]
+not ok public-repo/tests/MixedTest.phpt [method=testTwo]
+not ok public-repo/tests/SuccessTest.phpt [method=testOne]
+1..4

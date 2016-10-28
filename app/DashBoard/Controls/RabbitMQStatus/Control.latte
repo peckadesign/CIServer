@@ -1,0 +1,16 @@
+{default $consumers}
+
+<div class="panel panel-primary">
+	<div class="panel-heading">
+		<h3 class="panel-title">Stav RabbitMQ</h3>
+	</div>
+	<div class="panel-body">
+		<dl>
+			<dt>Zpracovatelé front</dt>
+			{if ! count($consumers)}<dd><span class="text-danger">Žádní neběží</span></dd>{/if}
+			{foreach $consumers as $queueName => $consumersForQueue}
+				<dd>{$queueName}: {count($consumersForQueue)|number}&times;</dd>
+			{/foreach}
+		</dl>
+	</div>
+</div>

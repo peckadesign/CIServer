@@ -1,0 +1,11 @@
+{block title}
+	Správa uživatelů
+{/block}
+
+{block content}
+
+	<ul>
+		{foreach $users as $editedUser}
+			<li>{$editedUser->gitHubName} <a n:href="setAsSystemUser! $editedUser->getId()" class="btn btn-warning" n:if=" ! $editedUser->systemUser">Nastavit jako systémového</a><span class="btn btn-success" n:if="$editedUser->systemUser">Systémový uživatel</span></li>
+		{/foreach}
+	</ul>

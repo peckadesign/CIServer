@@ -1,0 +1,15 @@
+<div class="panel panel-primary" n:if="count($createTestServers)">
+	<div class="panel-heading">
+		<h3 class="panel-title">Poslední vytvoření testovacích serverů</h3>
+	</div>
+	<div class="panel-body">
+		<dl>
+			{foreach $createTestServers as $createTestServer}
+				<dt><a href="{plink :DashBoard:CreateTestServer:default $createTestServer->id}">#{$createTestServer->id}: {$createTestServer->repository->name}:{$createTestServer->branchName}</a></dt>
+				{*<dd><span n:class="glyphicon, ! $buildRequest->failed ? glyphicon-ok, $buildRequest->failed ? glyphicon-exclamation-sign" aria-hidden="true"></span> <a href="{plink :DashBoard:BuildRequest:default $buildRequest->id}" n:class="">{$buildRequest->branch} ({$buildRequest->commit|substr:0,8})</a></dd>*}
+				<dd n:if="$createTestServer->start">Začátek: {$createTestServer->start|dateTime}</dd>
+				<dd n:if="$createTestServer->finish">Konec: {$createTestServer->finish|dateTime}</dd>
+			{/foreach}
+		</dl>
+	</div>
+</div>

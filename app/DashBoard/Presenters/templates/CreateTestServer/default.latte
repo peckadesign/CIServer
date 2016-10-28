@@ -1,0 +1,29 @@
+{block content}
+
+	<p><a n:href="publishCreateTestServerStatus-publish!" class="btn btn-info">Publikovat status na GitHub</a></p>
+	<p><a n:href="rerunCreateTestServer-publish!" class="btn btn-info">Náplánovat znovu sestavení</a></p>
+
+	<dl>
+		<dt>Větev</dt>
+		<dd><a n:href=":GitHub:branch $createTestServer">{$createTestServer->branchName}</a></dd>
+		<dt>Začátek sestavení</dt>
+		<dd n:if="$createTestServer->start">{$createTestServer->start|dateTime}</dd>
+		<dd n:if=" ! $createTestServer->start" class="text-muted">ještě nezačalo</dd>
+		<dt>Konec sestavení</dt>
+		<dd n:if="$createTestServer->finish">{$createTestServer->finish|dateTime}</dd>
+		<dd n:if=" ! $createTestServer->finish" class="text-muted">ještě neskončilo</dd>
+	</dl>
+
+	<h2>Výstup sestavení</h2>
+	<pre>
+		{$createTestServer->output}
+	</pre>
+{/block}
+
+{block title}
+	Sestavení #{$createTestServer->id}
+{/block}
+
+{block menu}
+
+{/block}

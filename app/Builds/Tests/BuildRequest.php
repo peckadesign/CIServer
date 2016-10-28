@@ -1,0 +1,30 @@
+<?php
+
+namespace CI\Builds\Tests;
+
+/**
+ * @property int $id {primary}
+ * @property string $commit
+ * @property string $branchName
+ * @property int|NULL $succeeded
+ * @property int|NULL $failed
+ * @property string|NULL $output
+ * @property \DateTime|NULL $start
+ * @property \DateTime|NULL $finish
+ * @property \CI\GitHub\Repository $repository {m:1 \CI\GitHub\Repository::$buildRequests}
+ */
+class BuildRequest extends \Nextras\Orm\Entity\Entity implements
+	\CI\Orm\IHasBranch
+{
+
+	public function getBranchName() : string
+	{
+		return $this->branchName;
+	}
+
+
+	public function getBranchRepository() : \CI\GitHub\Repository
+	{
+		return $this->repository;
+	}
+}

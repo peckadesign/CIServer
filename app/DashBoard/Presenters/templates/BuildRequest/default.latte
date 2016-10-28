@@ -1,0 +1,29 @@
+{block content}
+
+	<p><a n:href="publishBuildRequestStatus-publish!" class="btn btn-info">Publikovat status na GitHub</a></p>
+
+	<dl>
+		<dt>Větev</dt>
+		<dd><a n:href=":GitHub:branch $buildRequest">{$buildRequest->branch}</a></dd>
+		<dt>Commit</dt>
+		<dd>{$buildRequest->commit}</dd>
+		<dt>Začátek sestavení</dt>
+		<dd n:if="$buildRequest->start">{$buildRequest->start|date}</dd>
+		<dd n:if=" ! $buildRequest->start" class="text-muted">ještě nezačalo</dd>
+		<dt>Konec sestavení</dt>
+		<dd n:if="$buildRequest->finish">{$buildRequest->finish|date}</dd>
+		<dd n:if=" ! $buildRequest->finish" class="text-muted">ještě neskončilo</dd>
+	</dl>
+
+	<pre>
+		{$buildRequest->output}
+	</pre>
+{/block}
+
+{block title}
+	Sestavení #{$buildRequest->id}
+{/block}
+
+{block menu}
+
+{/block}

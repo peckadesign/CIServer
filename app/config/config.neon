@@ -1,0 +1,167 @@
+extensions:
+	ci: CI\DI\Extension
+	dbal: Nextras\Dbal\Bridges\NetteDI\DbalExtension
+	orm: Nextras\Orm\Bridges\NetteDI\OrmExtension
+	migrations: Nextras\Migrations\Bridges\NetteDI\MigrationsExtension
+	console: Kdyby\Console\DI\ConsoleExtension
+	github: Kdyby\Github\DI\GithubExtension
+	ci.monolog: CI\Monolog\DI\Extension
+	rabbitmq: Kdyby\RabbitMq\DI\RabbitMqExtension
+
+
+orm:
+	model: CI\Orm\Orm
+
+
+dbal:
+	driver: mysqli
+
+
+migrations:
+	dir: %appDir%/../migrations
+	driver: mysql
+	dbal: nextras
+
+
+github:
+	permissions:
+		- user:email
+		- repo:status
+		- repo
+		- public_repo
+
+
+ci.monolog:
+	allowedTypes:
+		 - CI\DashBoard\Presenters\BasePresenter
+
+
+monolog:
+	name: "pecka-ci-server"
+	handlers:
+		- CI\Monolog\Handlers\DayFileHandler("pecka-ci-server", %logDir%)
+
+
+parameters:
+	binDir: %appDir%/bin
+	logDir: %appDir%/../log
+
+
+application:
+	errorPresenter: Error
+	scanDirs: off
+	mapping:
+		*: CI\*\Presenters\*Presenter
+
+
+rabbitmq:
+	connection:
+#		host: %rabbitmq.host%
+#		port: %rabbitmq.port%
+#		user: %rabbitmq.user%
+#		password: %rabbitmq.password%
+#		vhost: %rabbitmq.vhost%
+	producers:
+		openedPullRequest:
+			exchange: {name: 'openedPullRequest', type: direct}
+			contentType: text/plain
+		createTestServer:
+			exchange: {name: 'createTestServer', type: direct}
+			contentType: text/plain
+
+	consumers:
+		openedPullRequest:
+			exchange: {name: 'openedPullRequest', type: direct}
+			queue: {name: 'openedPullRequest'}
+			callback: [@CI\Hooks\Consumers\OpenedPullRequest, process]
+		createTestServer:
+			exchange: {name: 'createTestServer', type: direct}
+			queue: {name: 'createTestServer'}
+			callback: [@CI\Builds\CreateTestServer\Consumers\CreateTestServer, process]
+
+
+services:
+	routerFactory:
+		class: CI\Router\RouterFactory
+		arguments:
+			- %wwwDir%
+
+	router: @routerFactory::createRouter
+
+	-
+		class: CI\Hooks\GitHubProcessor
+		arguments:
+			- @Kdyby\RabbitMq\Connection::getProducer('openedPullRequest')
+
+	-
+		class: CI\Hooks\Consumers\OpenedPullRequest
+		arguments:
+			- @Kdyby\RabbitMq\Connection::getProducer('createTestServer')
+
+	-
+		class: CI\Hooks\PullRequestProcessor
+
+	-
+		class: CI\Hooks\PushProcessor
+
+	-
+		class: CI\Builds\Tests\Commands\BuildCommand
+		tags:
+			- kdyby.console.command
+
+	-
+		class: CI\Builds\Tests\Builder
+
+	-
+		class: CI\Builds\Tests\WorkspaceLocator
+		arguments:
+			- %appDir%
+
+	-
+		implement: CI\DashBoard\Controls\RecentBuildRequests\IFactory
+
+	-
+		implement: CI\DashBoard\Controls\Logout\IFactory
+
+	-
+		implement: CI\DashBoard\Controls\PublishBuildRequestStatus\IFactory
+
+	-
+		class: CI\Builds\Tests\StatusPublicator
+
+	-
+		class: CI\GitHub\StatusPublicator
+
+	-
+		class: CI\Builds\CreateTestServer\StatusPublicator
+
+	-
+		class: CI\DashBoard\Presenters\OctocatsPresenter
+		arguments:
+			- %wwwDir%
+
+	-
+		class: CI\Builds\CreateTestServer\Consumers\CreateTestServer
+		arguments:
+			- %binDir%
+			- @Kdyby\Monolog\Logger::channel('createTest')
+
+	-
+		implement: CI\DashBoard\Controls\RecentCreateTestServer\IFactory
+
+	-
+		implement: CI\DashBoard\Controls\PublishCreateTestServerStatus\IFactory
+
+	-
+		implement: CI\DashBoard\Controls\RerunCreateTestServer\IFactory
+		arguments:
+			createTestServerProducer: @Kdyby\RabbitMq\Connection::getProducer('createTestServer')
+
+	-
+		implement: CI\DashBoard\Controls\RabbitMQStatus\IFactory
+		arguments:
+			- %rabbitmq.connection.host%
+			- 15672
+			- %rabbitmq.connection.user%
+			- %rabbitmq.connection.password%
+			- %rabbitmq.connection.vhost%
