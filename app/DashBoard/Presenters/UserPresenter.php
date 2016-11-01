@@ -4,7 +4,6 @@ namespace CI\DashBoard\Presenters;
 
 use CI;
 use Kdyby;
-use Nette;
 
 
 class UserPresenter extends BasePresenter

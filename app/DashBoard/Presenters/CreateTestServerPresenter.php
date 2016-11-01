@@ -5,8 +5,6 @@ namespace CI\DashBoard\Presenters;
 class CreateTestServerPresenter extends BasePresenter
 {
 
-	use TSecuredPresenter;
-
 	/**
 	 * @var \CI\Builds\CreateTestServer\CreateTestServer
 	 */

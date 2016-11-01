@@ -9,6 +9,8 @@ use Nette;
 abstract class BasePresenter extends Nette\Application\UI\Presenter
 {
 
+	use TSecuredPresenter;
+
 	const FLASH_MESSAGE_SUCCESS = 'success';
 	const FLASH_MESSAGE_INFO = 'info';
 	const FLASH_MESSAGE_WARNING = 'warning';

@@ -8,8 +8,6 @@ use CI;
 class BuildRequestPresenter extends BasePresenter
 {
 
-	use TSecuredPresenter;
-
 	/**
 	 * @var CI\Builds\Tests\BuildRequestsRepository
 	 */

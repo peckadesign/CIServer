@@ -8,8 +8,6 @@ use CI;
 class HomePagePresenter extends BasePresenter
 {
 
-	use TSecuredPresenter;
-
 	/**
 	 * @var CI\GitHub\RepositoriesRepository
 	 */
