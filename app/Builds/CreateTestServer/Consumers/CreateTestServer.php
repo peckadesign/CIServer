@@ -117,7 +117,10 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 	private function runProcess(\CI\Builds\CreateTestServer\CreateTestServer $build, string $cmd)
 	{
 		$build->output .= $cmd . "\n";
-		$process = new \Symfony\Component\Process\Process($cmd, $this->binDir, NULL, NULL, NULL);
+		$env = [
+			'HOME' => getenv('HOME'),
+		];
+		$process = new \Symfony\Component\Process\Process($cmd, $this->binDir, $env, NULL, NULL);
 		try {
 			$cb = function (string $type, string $buffer) use ($build) {
 				$build->output .= $buffer;
