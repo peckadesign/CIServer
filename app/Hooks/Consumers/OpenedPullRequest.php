@@ -20,15 +20,23 @@ class OpenedPullRequest implements \Kdyby\RabbitMq\IConsumer
 	 */
 	private $createTestServerProducer;
 
+	/**
+	 * @var \CI\Builds\CreateTestServer\StatusPublicator
+	 */
+	private $statusPublicator;
+
 
 	public function __construct(
 		\Kdyby\RabbitMq\IProducer $createTestServerProducer,
 		\CI\Hooks\OpenedPullRequestsRepository $openedPullRequestRepository,
-		\CI\Builds\CreateTestServer\CreateTestServersRepository $createTestServerRepository
+		\CI\Builds\CreateTestServer\CreateTestServersRepository $createTestServerRepository,
+		\CI\Builds\CreateTestServer\StatusPublicator $statusPublicator
 	) {
 		$this->openedPullRequestRepository = $openedPullRequestRepository;
 		$this->createTestServerRepository = $createTestServerRepository;
 		$this->createTestServerProducer = $createTestServerProducer;
+
+		$this->statusPublicator = $statusPublicator;
 	}
 
 
@@ -45,6 +53,7 @@ class OpenedPullRequest implements \Kdyby\RabbitMq\IConsumer
 		$this->createTestServerRepository->persistAndFlush($createTestServer);
 
 		$this->createTestServerProducer->publish($createTestServer->id);
+		$this->statusPublicator->publish($createTestServer);
 
 		return self::MSG_ACK;
 	}

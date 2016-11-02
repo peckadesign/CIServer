@@ -65,6 +65,9 @@ rabbitmq:
 		openedPullRequest:
 			exchange: {name: 'openedPullRequest', type: direct}
 			contentType: text/plain
+		synchronizedPullRequest:
+			exchange: {name: 'synchronizedPullRequest', type: direct}
+			contentType: text/plain
 		createTestServer:
 			exchange: {name: 'createTestServer', type: direct}
 			contentType: text/plain
@@ -74,6 +77,10 @@ rabbitmq:
 			exchange: {name: 'openedPullRequest', type: direct}
 			queue: {name: 'openedPullRequest'}
 			callback: [@CI\Hooks\Consumers\OpenedPullRequest, process]
+		synchronizedPullRequest:
+			exchange: {name: 'synchronizedPullRequest', type: direct}
+			queue: {name: 'synchronizedPullRequest'}
+			callback: [@CI\Hooks\Consumers\SynchronizedPullRequest, process]
 		createTestServer:
 			exchange: {name: 'createTestServer', type: direct}
 			queue: {name: 'createTestServer'}
@@ -92,9 +99,15 @@ services:
 		class: CI\Hooks\GitHubProcessor
 		arguments:
 			- @Kdyby\RabbitMq\Connection::getProducer('openedPullRequest')
+			- @Kdyby\RabbitMq\Connection::getProducer('synchronizedPullRequest')
 
 	-
 		class: CI\Hooks\Consumers\OpenedPullRequest
+		arguments:
+			- @Kdyby\RabbitMq\Connection::getProducer('createTestServer')
+
+	-
+		class: CI\Hooks\Consumers\SynchronizedPullRequest
 		arguments:
 			- @Kdyby\RabbitMq\Connection::getProducer('createTestServer')
 

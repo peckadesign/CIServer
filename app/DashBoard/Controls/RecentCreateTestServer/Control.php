@@ -23,7 +23,7 @@ class Control extends \Nette\Application\UI\Control
 	public function render()
 	{
 		$this->template->setFile(__DIR__ . '/Control.latte');
-		$this->template->createTestServers = $this->createTestServersRepository->findAll();
+		$this->template->createTestServers = $this->createTestServersRepository->findAll()->orderBy('start', \Nextras\Orm\Collection\ICollection::DESC)->limitBy(5);
 		$this->template->render();
 	}
 

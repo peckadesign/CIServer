@@ -12,6 +12,7 @@ use Nextras;
  * @property-read CI\Builds\Tests\BuildRequestsRepository $buildRequests
  * @property-read CI\User\UsersRepository $users
  * @property-read CI\Hooks\OpenedPullRequestsRepository $openedPullRequests
+ * @property-read CI\Hooks\SynchronizedPullRequestsRepository $synchronizedPullRequests
  * @property-read CI\Builds\CreateTestServer\CreateTestServersRepository $createTestServers
  */
 class Orm extends Nextras\Orm\Model\Model
