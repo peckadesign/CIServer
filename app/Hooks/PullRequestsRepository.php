@@ -14,6 +14,7 @@ class PullRequestsRepository extends \Nextras\Orm\Repository\Repository
 			PullRequest::class,
 			SynchronizedPullRequest::class,
 			ClosedPullRequest::class,
+			OpenedPullRequest::class,
 		];
 	}
 
