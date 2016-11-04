@@ -58,6 +58,10 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 		$hookId = $message->getBody();
 		$build = $this->createTestServersRepository->getById($hookId);
 
+		if ( ! $build) {
+			return self::MSG_REJECT;
+		}
+
 		$conditions = [
 			'systemUser' => TRUE,
 		];
