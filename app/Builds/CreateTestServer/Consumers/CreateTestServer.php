@@ -123,7 +123,7 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 
 	private function runProcess(\CI\Builds\CreateTestServer\CreateTestServer $build, string $cmd)
 	{
-		$build->output .= $cmd . "\n";
+		$build->output .= trim($cmd) . "\n";
 		$env = [
 			'HOME' => getenv('HOME'),
 		];
