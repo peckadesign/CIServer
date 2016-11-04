@@ -38,6 +38,10 @@ class ClosedPullRequest implements \Kdyby\RabbitMq\IConsumer
 		$hookId = $message->getBody();
 		$hook = $this->pullRequestsRepository->getById($hookId);
 
+		if ( ! $hook) {
+			return self::MSG_REJECT;
+		}
+
 		$testServerPath = '/var/www/' . $hook->repository->name . '/test' . $hook->pullRequestNumber;
 		if (is_dir($testServerPath)) {
 			\Nette\Utils\FileSystem::delete($testServerPath);

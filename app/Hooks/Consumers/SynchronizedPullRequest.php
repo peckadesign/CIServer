@@ -44,6 +44,10 @@ class SynchronizedPullRequest implements \Kdyby\RabbitMq\IConsumer
 		$hookId = $message->getBody();
 		$hook = $this->pullRequestsRepository->getById($hookId);
 
+		if ( ! $hook) {
+			return self::MSG_REJECT;
+		}
+
 		$conditions = [
 			'repository' => $hook->repository,
 			'branchName' => $hook->branchName,

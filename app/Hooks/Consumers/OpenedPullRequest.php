@@ -45,6 +45,10 @@ class OpenedPullRequest implements \Kdyby\RabbitMq\IConsumer
 		$hookId = $message->getBody();
 		$hook = $this->pullRequestRepository->getById($hookId);
 
+		if ( ! $hook) {
+			return self::MSG_REJECT;
+		}
+
 		$createTestServer = new \CI\Builds\CreateTestServer\CreateTestServer();
 		$createTestServer->pullRequestNumber = $hook->pullRequestNumber;
 		$createTestServer->branchName = $hook->branchName;
