@@ -52,7 +52,7 @@ class ClosedPullRequest implements \Kdyby\RabbitMq\IConsumer
 			$dbName = file_get_contents($dbNameFile);
 			$dbName = str_replace('testX', 'test' . $hook->pullRequestNumber, $dbName);
 
-			$cmd = sprintf('mysqladmin drop %s --defaults-extra-file=/var/www/%s/mysql.cnf', $dbName, $hook->repository->name);
+			$cmd = sprintf('mysqladmin --defaults-extra-file=/var/www/%s/mysql.cnf --force drop %s', $hook->repository->name, $dbName);
 			$this->runProcess($cmd);
 		}
 
