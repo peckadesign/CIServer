@@ -92,11 +92,14 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 			$cmd = sprintf('./createTest.sh -r %s -i %d -b %s', $build->repository->name, $build->pullRequestNumber, $build->branchName);
 			$this->runProcess($build, $cmd);
 
-			$testName = 'test' . $build->pullRequestNumber;
-			if ($databaseFiles) {
-				$cmd = sprintf('sed "s/testX/%s/" < /var/www/%s/local.neon > /var/www/%s/%s/app/config/local.neon', $testName, $build->repository->name, $build->repository->name, $testName);
-			} else {
-				$cmd = sprintf('sed "s/testX/%s/" < /var/www/%s/local.neon > /var/www/%s/%s/app/config/local.neon', 'staging', $build->repository->name, $build->repository->name, $testName);
+			$defaultLocalNeonPath = '/var/www/' . $build->repository->name . '/local.neon';
+			if (is_readable($defaultLocalNeonPath)) {
+				$testName = 'test' . $build->pullRequestNumber;
+				if ($databaseFiles) {
+					$cmd = sprintf('sed "s/testX/%s/" < %s > /var/www/%s/%s/app/config/local.neon', $testName, $defaultLocalNeonPath, $build->repository->name, $testName);
+				} else {
+					$cmd = sprintf('sed "s/testX/%s/" < %s > /var/www/%s/%s/app/config/local.neon', 'staging', $defaultLocalNeonPath, $build->repository->name, $testName);
+				}
 			}
 
 			$this->runProcess($build, $cmd);
