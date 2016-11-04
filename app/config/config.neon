@@ -74,6 +74,9 @@ rabbitmq:
 		createTestServer:
 			exchange: {name: 'createTestServer', type: direct}
 			contentType: text/plain
+		push:
+			exchange: {name: 'push', type: direct}
+			contentType: text/plain
 
 	consumers:
 		openedPullRequest:
@@ -92,6 +95,10 @@ rabbitmq:
 			exchange: {name: 'createTestServer', type: direct}
 			queue: {name: 'createTestServer'}
 			callback: [@CI\Builds\CreateTestServer\Consumers\CreateTestServer, process]
+		push:
+			exchange: {name: 'push', type: direct}
+			queue: {name: 'push'}
+			callback: [@CI\Hooks\Consumers\Push, process]
 
 
 services:
@@ -103,11 +110,17 @@ services:
 	router: @routerFactory::createRouter
 
 	-
-		class: CI\Hooks\GitHubProcessor
+		class: CI\Hooks\PullRequestProcessor
 		arguments:
 			- @Kdyby\RabbitMq\Connection::getProducer('openedPullRequest')
 			- @Kdyby\RabbitMq\Connection::getProducer('synchronizedPullRequest')
 			- @Kdyby\RabbitMq\Connection::getProducer('closedPullRequest')
+
+	-
+		class: CI\Hooks\PushProcessor
+		arguments:
+			- @Kdyby\RabbitMq\Connection::getProducer('push')
+
 
 	-
 		class: CI\Hooks\Consumers\OpenedPullRequest
@@ -126,10 +139,9 @@ services:
 			- @Kdyby\Monolog\Logger::channel('closedPullRequestHook')
 
 	-
-		class: CI\Hooks\PullRequestProcessor
-
-	-
-		class: CI\Hooks\PushProcessor
+		class: CI\Hooks\Consumers\Push
+		arguments:
+			- @Kdyby\Monolog\Logger::channel('push')
 
 	-
 		class: CI\Builds\Tests\Commands\BuildCommand

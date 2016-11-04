@@ -2,19 +2,19 @@
 
 namespace CI\Hooks\Presenters;
 
-class GitHubPresenter extends \Nette\Application\UI\Presenter
+class PushPresenter extends \Nette\Application\UI\Presenter
 {
 
 	/**
-	 * @var \CI\Hooks\GitHubProcessor
+	 * @var \CI\Hooks\PushProcessor
 	 */
-	private $gitHubProcessor;
+	private $pushProcessor;
 
 
 	public function __construct(
-		\CI\Hooks\GitHubProcessor $gitHubProcessor
+		\CI\Hooks\PushProcessor $pushProcessor
 	) {
-		$this->gitHubProcessor = $gitHubProcessor;
+		$this->pushProcessor = $pushProcessor;
 	}
 
 
@@ -36,8 +36,8 @@ class GitHubPresenter extends \Nette\Application\UI\Presenter
 		}
 
 		try {
-			$hook = $this->gitHubProcessor->process($json);
-			$this->sendResponse(new \Nette\Application\Responses\TextResponse('Hook přijat pod ID ' . $hook->id));
+			$this->pushProcessor->process($json);
+			$this->sendResponse(new \Nette\Application\Responses\TextResponse('Hook přijat'));
 		} catch (\CI\Hooks\UnKnownHookException $e) {
 			$this->error('Předaný hook není podporován', \Nette\Http\IResponse::S200_OK);
 		}
