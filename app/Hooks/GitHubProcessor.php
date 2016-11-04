@@ -13,19 +13,14 @@ class GitHubProcessor
 	private $openedPullRequestProducer;
 
 	/**
-	 * @var OpenedPullRequestsRepository
+	 * @var PullRequestsRepository
 	 */
-	private $openedPullRequestRepository;
+	private $pullRequestsRepository;
 
 	/**
 	 * @var \CI\GitHub\RepositoriesRepository
 	 */
 	private $repositoriesRepository;
-
-	/**
-	 * @var SynchronizedPullRequestsRepository
-	 */
-	private $synchronizedPullRequestsRepository;
 
 	/**
 	 * @var \Kdyby\RabbitMq\IProducer
@@ -36,65 +31,50 @@ class GitHubProcessor
 	public function __construct(
 		\Kdyby\RabbitMq\IProducer $openedPullRequestProducer,
 		\Kdyby\RabbitMq\IProducer $synchronizedPullRequestProducer,
-		OpenedPullRequestsRepository $openedPullRequestRepository,
-		\CI\GitHub\RepositoriesRepository $repositoriesRepository,
-		SynchronizedPullRequestsRepository $synchronizedPullRequestsRepository
+		\Kdyby\RabbitMq\IProducer $closedPullRequestProducer,
+		PullRequestsRepository $pullRequestRepository,
+		\CI\GitHub\RepositoriesRepository $repositoriesRepository
 	) {
 		$this->openedPullRequestProducer = $openedPullRequestProducer;
 		$this->synchronizedPullRequestProducer = $synchronizedPullRequestProducer;
-		$this->openedPullRequestRepository = $openedPullRequestRepository;
+		$this->pullRequestsRepository = $pullRequestRepository;
 		$this->repositoriesRepository = $repositoriesRepository;
-		$this->synchronizedPullRequestsRepository = $synchronizedPullRequestsRepository;
 	}
 
 
-	public function process(array $hookJson)
+	public function process(array $hookJson) : PullRequest
 	{
 		if (isset($hookJson['pull_request']) && $hookJson['action'] === 'opened') {
-			$repositoryName = $hookJson['repository']['name'];
-			$conditions = [
-				'name' => $repositoryName,
-			];
-			$repository = $this->repositoriesRepository->getBy($conditions);
-
-			if ( ! $repository) {
-				$repository = new \CI\GitHub\Repository();
-				$repository->name = $repositoryName;
-				$this->repositoriesRepository->persistAndFlush($repository);
-			}
-
 			$hook = new OpenedPullRequest();
-			$hook->repository = $repository;
-			$hook->hook = \Nette\Utils\Json::encode($hookJson);
-			$this->openedPullRequestRepository->persistAndFlush($hook);
-
-			$this->openedPullRequestProducer->publish($hook->id);
-
-			return $hook;
-
+			$producer = $this->openedPullRequestProducer;
 		} elseif (isset($hookJson['pull_request']) && $hookJson['action'] === 'synchronize') {
-			$repositoryName = $hookJson['repository']['name'];
-			$conditions = [
-				'name' => $repositoryName,
-			];
-			$repository = $this->repositoriesRepository->getBy($conditions);
-
-			if ( ! $repository) {
-				$repository = new \CI\GitHub\Repository();
-				$repository->name = $repositoryName;
-				$this->repositoriesRepository->persistAndFlush($repository);
-			}
-
 			$hook = new SynchronizedPullRequest();
-			$hook->repository = $repository;
-			$hook->hook = \Nette\Utils\Json::encode($hookJson);
-			$this->synchronizedPullRequestsRepository->persistAndFlush($hook);
-
-			$this->synchronizedPullRequestProducer->publish($hook->id);
-
-			return $hook;
+			$producer = $this->synchronizedPullRequestProducer;
+		} elseif (isset($hookJson['pull_request']) && $hookJson['action'] === 'closed') {
+			$hook = new ClosedPullRequest();
+			$producer = $this->synchronizedPullRequestProducer;
+		} else {
+			throw new UnKnownHookException();
 		}
 
-		throw new UnKnownHookException();
+		$repositoryName = $hookJson['repository']['name'];
+		$conditions = [
+			'name' => $repositoryName,
+		];
+		$repository = $this->repositoriesRepository->getBy($conditions);
+
+		if ( ! $repository) {
+			$repository = new \CI\GitHub\Repository();
+			$repository->name = $repositoryName;
+			$this->repositoriesRepository->persistAndFlush($repository);
+		}
+
+		$hook->repository = $repository;
+		$hook->hook = \Nette\Utils\Json::encode($hookJson);
+		$this->pullRequestsRepository->persistAndFlush($hook);
+
+		$producer->publish($hook->id);
+
+		return $hook;
 	}
 }

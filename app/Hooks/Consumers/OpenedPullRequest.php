@@ -6,9 +6,9 @@ class OpenedPullRequest implements \Kdyby\RabbitMq\IConsumer
 {
 
 	/**
-	 * @var \CI\Hooks\OpenedPullRequestsRepository
+	 * @var \CI\Hooks\PullRequestsRepository
 	 */
-	private $openedPullRequestRepository;
+	private $pullRequestRepository;
 
 	/**
 	 * @var \CI\Builds\CreateTestServer\CreateTestServersRepository
@@ -28,11 +28,11 @@ class OpenedPullRequest implements \Kdyby\RabbitMq\IConsumer
 
 	public function __construct(
 		\Kdyby\RabbitMq\IProducer $createTestServerProducer,
-		\CI\Hooks\OpenedPullRequestsRepository $openedPullRequestRepository,
+		\CI\Hooks\PullRequestsRepository $pullRequestRepository,
 		\CI\Builds\CreateTestServer\CreateTestServersRepository $createTestServerRepository,
 		\CI\Builds\CreateTestServer\StatusPublicator $statusPublicator
 	) {
-		$this->openedPullRequestRepository = $openedPullRequestRepository;
+		$this->pullRequestRepository = $pullRequestRepository;
 		$this->createTestServerRepository = $createTestServerRepository;
 		$this->createTestServerProducer = $createTestServerProducer;
 
@@ -43,7 +43,7 @@ class OpenedPullRequest implements \Kdyby\RabbitMq\IConsumer
 	public function process(\PhpAmqpLib\Message\AMQPMessage $message)
 	{
 		$hookId = $message->getBody();
-		$hook = $this->openedPullRequestRepository->getById($hookId);
+		$hook = $this->pullRequestRepository->getById($hookId);
 
 		$createTestServer = new \CI\Builds\CreateTestServer\CreateTestServer();
 		$createTestServer->pullRequestNumber = $hook->pullRequestNumber;

@@ -68,6 +68,9 @@ rabbitmq:
 		synchronizedPullRequest:
 			exchange: {name: 'synchronizedPullRequest', type: direct}
 			contentType: text/plain
+		closedPullRequest:
+			exchange: {name: 'closedPullRequest', type: direct}
+			contentType: text/plain
 		createTestServer:
 			exchange: {name: 'createTestServer', type: direct}
 			contentType: text/plain
@@ -81,6 +84,10 @@ rabbitmq:
 			exchange: {name: 'synchronizedPullRequest', type: direct}
 			queue: {name: 'synchronizedPullRequest'}
 			callback: [@CI\Hooks\Consumers\SynchronizedPullRequest, process]
+		closedPullRequest:
+			exchange: {name: 'closedPullRequest', type: direct}
+			queue: {name: 'closedPullRequest'}
+			callback: [@CI\Hooks\Consumers\ClosedPullRequest, process]
 		createTestServer:
 			exchange: {name: 'createTestServer', type: direct}
 			queue: {name: 'createTestServer'}
@@ -100,6 +107,7 @@ services:
 		arguments:
 			- @Kdyby\RabbitMq\Connection::getProducer('openedPullRequest')
 			- @Kdyby\RabbitMq\Connection::getProducer('synchronizedPullRequest')
+			- @Kdyby\RabbitMq\Connection::getProducer('closedPullRequest')
 
 	-
 		class: CI\Hooks\Consumers\OpenedPullRequest
@@ -110,6 +118,12 @@ services:
 		class: CI\Hooks\Consumers\SynchronizedPullRequest
 		arguments:
 			- @Kdyby\RabbitMq\Connection::getProducer('createTestServer')
+
+	-
+		class: CI\Hooks\Consumers\ClosedPullRequest
+		arguments:
+			- %binDir%
+			- @Kdyby\Monolog\Logger::channel('closedPullRequestHook')
 
 	-
 		class: CI\Hooks\PullRequestProcessor

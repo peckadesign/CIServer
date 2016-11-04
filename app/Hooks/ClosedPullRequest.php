@@ -2,13 +2,13 @@
 
 namespace CI\Hooks;
 
-class SynchronizedPullRequest extends PullRequest
+class ClosedPullRequest extends PullRequest
 {
 
 	public function __construct()
 	{
 		parent::__construct();
-		$this->type = self::TYPE_SYNCHRONIZED;
+		$this->type = static::TYPE_CLOSED;
 	}
 
 }

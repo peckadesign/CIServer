@@ -14,8 +14,9 @@ CREATE TABLE `repositories` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
-CREATE TABLE `opened_pull_requests` (
+CREATE TABLE `pull_requests_hooks` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
+  `type` int(11) NOT NULL,
   `pull_request_number` int(11) NOT NULL,
   `repository` int(11) NOT NULL,
   `hook` TEXT NOT NULL,

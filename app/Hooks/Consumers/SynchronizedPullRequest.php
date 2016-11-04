@@ -6,9 +6,9 @@ class SynchronizedPullRequest implements \Kdyby\RabbitMq\IConsumer
 {
 
 	/**
-	 * @var \CI\Hooks\SynchronizedPullRequestsRepository
+	 * @var \CI\Hooks\PullRequestsRepository
 	 */
-	private $synchronizedPullRequestsRepository;
+	private $pullRequestsRepository;
 
 	/**
 	 * @var \CI\Builds\CreateTestServer\StatusPublicator
@@ -28,21 +28,21 @@ class SynchronizedPullRequest implements \Kdyby\RabbitMq\IConsumer
 
 	public function __construct(
 		\Kdyby\RabbitMq\IProducer $createTestServerProducer,
-		\CI\Hooks\SynchronizedPullRequestsRepository $synchronizedPullRequestsRepository,
+		\CI\Hooks\PullRequestsRepository $pullRequestsRepository,
 		\CI\Builds\CreateTestServer\CreateTestServersRepository $createTestServersRepository,
 		\CI\Builds\CreateTestServer\StatusPublicator $statusPublicator
 	) {
 		$this->createTestServerProducer = $createTestServerProducer;
-		$this->synchronizedPullRequestsRepository = $synchronizedPullRequestsRepository;
 		$this->statusPublicator = $statusPublicator;
 		$this->createTestServersRepository = $createTestServersRepository;
+		$this->pullRequestsRepository = $pullRequestsRepository;
 	}
 
 
 	public function process(\PhpAmqpLib\Message\AMQPMessage $message)
 	{
 		$hookId = $message->getBody();
-		$hook = $this->synchronizedPullRequestsRepository->getById($hookId);
+		$hook = $this->pullRequestsRepository->getById($hookId);
 
 		$conditions = [
 			'repository' => $hook->repository,
