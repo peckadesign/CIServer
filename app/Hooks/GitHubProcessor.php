@@ -27,6 +27,11 @@ class GitHubProcessor
 	 */
 	private $synchronizedPullRequestProducer;
 
+	/**
+	 * @var \Kdyby\RabbitMq\IProducer
+	 */
+	private $closedPullRequestProducer;
+
 
 	public function __construct(
 		\Kdyby\RabbitMq\IProducer $openedPullRequestProducer,
@@ -39,6 +44,7 @@ class GitHubProcessor
 		$this->synchronizedPullRequestProducer = $synchronizedPullRequestProducer;
 		$this->pullRequestsRepository = $pullRequestRepository;
 		$this->repositoriesRepository = $repositoriesRepository;
+		$this->closedPullRequestProducer = $closedPullRequestProducer;
 	}
 
 
@@ -52,7 +58,7 @@ class GitHubProcessor
 			$producer = $this->synchronizedPullRequestProducer;
 		} elseif (isset($hookJson['pull_request']) && $hookJson['action'] === 'closed') {
 			$hook = new ClosedPullRequest();
-			$producer = $this->synchronizedPullRequestProducer;
+			$producer = $this->closedPullRequestProducer;
 		} else {
 			throw new UnKnownHookException();
 		}
