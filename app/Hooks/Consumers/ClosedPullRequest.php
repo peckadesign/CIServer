@@ -53,8 +53,8 @@ class ClosedPullRequest implements \Kdyby\RabbitMq\IConsumer
 		$dbNameFile = '/var/www/' . $hook->repository->name . '/dbname.cnf';
 		if (is_readable($dbNameFile)) {
 			$dbName = file_get_contents($dbNameFile);
-			$this->logger->addInfo('Proběhne smazání databáze ' . $dbName);
 			$dbName = str_replace('testX', 'test' . $hook->pullRequestNumber, $dbName);
+			$this->logger->addInfo('Proběhne smazání databáze ' . $dbName);
 
 			$cmd = sprintf('mysql --defaults-extra-file=/var/www/%s/mysql.cnf -e "DROP DATABASE IF EXISTS %s;"', $hook->repository->name, $dbName);
 			$this->runProcess($cmd);
