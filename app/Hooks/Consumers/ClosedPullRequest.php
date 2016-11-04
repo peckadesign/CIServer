@@ -44,12 +44,16 @@ class ClosedPullRequest implements \Kdyby\RabbitMq\IConsumer
 
 		$testServerPath = '/var/www/' . $hook->repository->name . '/test' . $hook->pullRequestNumber;
 		if (is_dir($testServerPath)) {
+			$this->logger->addInfo('Proběhne smazání adresáře ' . $testServerPath);
 			\Nette\Utils\FileSystem::delete($testServerPath);
+		} else {
+			$this->logger->addNotice('Adresář projektu už neexistuje ' . $testServerPath);
 		}
 
 		$dbNameFile = '/var/www/' . $hook->repository->name . '/dbname.cnf';
 		if (is_readable($dbNameFile)) {
 			$dbName = file_get_contents($dbNameFile);
+			$this->logger->addInfo('Proběhne smazání databáze ' . $dbName);
 			$dbName = str_replace('testX', 'test' . $hook->pullRequestNumber, $dbName);
 
 			$cmd = sprintf('mysqladmin --defaults-extra-file=/var/www/%s/mysql.cnf --force drop %s', $hook->repository->name, $dbName);
