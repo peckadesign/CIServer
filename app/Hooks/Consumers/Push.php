@@ -69,7 +69,6 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 
 					try {
 						$currentBranch = $this->runProcess('git symbolic-ref --short HEAD');
-						$currentBranch = $currentBranch[0];
 						$this->logger->addInfo('Aktuální větev ' . $currentBranch);
 					} catch (\Exception $e) {
 						throw new \Exception('Nepodařilo na získat název aktuální větve', $e->getCode(), $e);
