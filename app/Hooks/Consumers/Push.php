@@ -26,7 +26,7 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 			return self::MSG_REJECT;
 		}
 
-		$repositoryName = $hookJson['repositoryName'];
+		$repositoryName = strtolower($hookJson['repositoryName']);
 		$branchName = $hookJson['branchName'];
 
 		$e = NULL;
@@ -109,6 +109,7 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 
 	private function runProcess(string $cmd) : string
 	{
+		$this->logger->addInfo($cmd);
 		$process = new \Symfony\Component\Process\Process($cmd, NULL, NULL, NULL, NULL);
 		try {
 			$cb = function (string $type, string $buffer) {
@@ -119,8 +120,7 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 				}
 			};
 			$process->mustRun($cb);
-
-			echo trim($process->getOutput());
+			return trim($process->getOutput());
 		} catch (\Symfony\Component\Process\Exception\RuntimeException $e) {
 			$this->logger->addError($e->getMessage());
 
