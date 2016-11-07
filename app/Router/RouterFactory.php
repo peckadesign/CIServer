@@ -95,7 +95,7 @@ class RouterFactory
 				},
 			],
 		];
-		$router[] = new Nette\Application\Routers\Route('https://github.com/peckadesign/<repository [a-z-0-9/]+>/tree/<branch>', $metadata);
+		$router[] = new Nette\Application\Routers\Route('https://github.com/peckadesign/<repository [a-zA-Z0-9/]+>/tree/<branch>', $metadata);
 
 		$metadata = [
 			NULL => [
@@ -110,7 +110,7 @@ class RouterFactory
 				},
 			],
 		];
-		$router[] = new Nette\Application\Routers\Route('http://<repository [a-z-0-9/]+>.test<pullRequestNumber [0-9]+>.peckadesign.com', $metadata);
+		$router[] = new Nette\Application\Routers\Route('http://<repository [a-zA-Z0-9/]+>.test<pullRequestNumber [0-9]+>.peckadesign.com', $metadata);
 
 		return $router;
 	}
