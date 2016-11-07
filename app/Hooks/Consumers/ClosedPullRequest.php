@@ -42,7 +42,7 @@ class ClosedPullRequest implements \Kdyby\RabbitMq\IConsumer
 			return self::MSG_REJECT;
 		}
 
-		$testServerPath = '/var/www/' . $hook->repository->name . '/test' . $hook->pullRequestNumber;
+		$testServerPath = '/var/www/' . strtolower($hook->repository->name) . '/test' . $hook->pullRequestNumber;
 		if (is_dir($testServerPath)) {
 			$this->logger->addInfo('Proběhne smazání adresáře ' . $testServerPath);
 			\Nette\Utils\FileSystem::delete($testServerPath);
@@ -50,13 +50,13 @@ class ClosedPullRequest implements \Kdyby\RabbitMq\IConsumer
 			$this->logger->addNotice('Adresář projektu už neexistuje ' . $testServerPath);
 		}
 
-		$dbNameFile = '/var/www/' . $hook->repository->name . '/dbname.cnf';
+		$dbNameFile = '/var/www/' . strtolower($hook->repository->name) . '/dbname.cnf';
 		if (is_readable($dbNameFile)) {
 			$dbName = file_get_contents($dbNameFile);
 			$dbName = str_replace('testX', 'test' . $hook->pullRequestNumber, $dbName);
 			$this->logger->addInfo('Proběhne smazání databáze ' . $dbName);
 
-			$cmd = sprintf('mysql --defaults-extra-file=/var/www/%s/mysql.cnf -e "DROP DATABASE IF EXISTS %s;"', $hook->repository->name, $dbName);
+			$cmd = sprintf('mysql --defaults-extra-file=/var/www/%s/mysql.cnf -e "DROP DATABASE IF EXISTS %s;"', strtolower($hook->repository->name), $dbName);
 			$this->runProcess($cmd);
 		}
 
