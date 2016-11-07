@@ -39,7 +39,7 @@ git checkout ${BRANCH_NAME}
 chmod -R 0777 temp/ log/
 
 printf "Připravím build:\n"
-PATH=$PATH make cache
+PATH=$PATH make clean
 PATH=$PATH make build-staging
 
 printf "\nHotovo\n"
