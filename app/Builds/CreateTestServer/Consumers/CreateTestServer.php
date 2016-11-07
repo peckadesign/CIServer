@@ -89,16 +89,16 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 
 		try {
 			$success = TRUE;
-			$cmd = sprintf('./createTest.sh -r %s -i %d -b %s', $build->repository->name, $build->pullRequestNumber, $build->branchName);
+			$cmd = sprintf('./createTest.sh -r %s -i %d -b %s', strtolower($build->repository->name), $build->pullRequestNumber, $build->branchName);
 			$this->runProcess($build, $cmd);
 
-			$defaultLocalNeonPath = '/var/www/' . $build->repository->name . '/local.neon';
+			$defaultLocalNeonPath = '/var/www/' . strtolower($build->repository->name) . '/local.neon';
 			if (is_readable($defaultLocalNeonPath)) {
 				$testName = 'test' . $build->pullRequestNumber;
 				if ($databaseFiles) {
-					$cmd = sprintf('sed "s/testX/%s/" < %s > /var/www/%s/%s/app/config/local.neon', $testName, $defaultLocalNeonPath, $build->repository->name, $testName);
+					$cmd = sprintf('sed "s/testX/%s/" < %s > /var/www/%s/%s/app/config/local.neon', $testName, $defaultLocalNeonPath, strtolower($build->repository->name), $testName);
 				} else {
-					$cmd = sprintf('sed "s/testX/%s/" < %s > /var/www/%s/%s/app/config/local.neon', 'staging', $defaultLocalNeonPath, $build->repository->name, $testName);
+					$cmd = sprintf('sed "s/testX/%s/" < %s > /var/www/%s/%s/app/config/local.neon', 'staging', $defaultLocalNeonPath, strtolower($build->repository->name), $testName);
 				}
 			}
 
