@@ -45,7 +45,13 @@ class ClosedPullRequest implements \Kdyby\RabbitMq\IConsumer
 		$testServerPath = '/var/www/' . strtolower($hook->repository->name) . '/test' . $hook->pullRequestNumber;
 		if (is_dir($testServerPath)) {
 			$this->logger->addInfo('Proběhne smazání adresáře ' . $testServerPath);
-			\Nette\Utils\FileSystem::delete($testServerPath);
+			try {
+				\Nette\Utils\FileSystem::delete($testServerPath);
+			} catch (\Nette\IOException $e) {
+				$this->logger->addError($e);
+
+				return self::MSG_REJECT_REQUEUE;
+			}
 		} else {
 			$this->logger->addNotice('Adresář projektu už neexistuje ' . $testServerPath);
 		}
