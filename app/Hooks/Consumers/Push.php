@@ -82,7 +82,7 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 
 					if (is_readable('Makefile')) {
 						$this->runProcess('make clean-cache');
-						$this->runProcess('make build-staging');
+						$this->runProcess('HOME=/home/' . get_current_user() . ' make build-staging');
 					} else {
 						if (is_readable('temp/cache')) {
 							$this->runProcess('git clean -dfX temp/cache');
