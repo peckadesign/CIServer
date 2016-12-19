@@ -75,12 +75,12 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 					}
 
 					if ($branchName !== 'refs/heads/' . $currentBranch) {
-						throw new \Exception('Do změn nepřišla aktuální větev');
+						throw new \CI\Hooks\SkipException('Do změn nepřišla aktuální větev');
 					}
 
 					$this->runProcess('git reset origin/' . $currentBranch . ' --hard');
 
-					if (is_readable('Makefile')) {
+					if (is_readable('Makefile') && ($content = file_get_contents('Makefile')) && strpos('clean-cache:', $content) !== FALSE && strpos('build-staging:', $content) !== FALSE) {
 						$this->runProcess('make clean-cache');
 						$this->runProcess('HOME=/home/' . get_current_user() . ' make build-staging');
 					} else {
@@ -90,8 +90,11 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 							$this->runProcess('git clean -dfX temp');
 						}
 					}
+				} catch(\CI\Hooks\SkipException $e) {
+					$this->logger->addInfo($e->getMessage());
+					continue;
 				} catch (\Exception $e) {
-					echo $e->getMessage() . PHP_EOL;
+					$this->logger->addError($e->getMessage());
 					continue;
 				} finally {
 					chdir('..');
