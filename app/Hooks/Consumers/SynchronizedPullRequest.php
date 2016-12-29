@@ -55,16 +55,19 @@ class SynchronizedPullRequest implements \Kdyby\RabbitMq\IConsumer
 		$build = $this->createTestServersRepository->getBy($conditions);
 
 		if ( ! $build) {
-			$createTestServer = new \CI\Builds\CreateTestServer\CreateTestServer();
-			$createTestServer->pullRequestNumber = $hook->pullRequestNumber;
-			$createTestServer->branchName = $hook->branchName;
-			$createTestServer->commit = $hook->commit;
-			$createTestServer->repository = $hook->repository;
-			$this->createTestServersRepository->persistAndFlush($createTestServer);
+			$build = new \CI\Builds\CreateTestServer\CreateTestServer();
+			$build->pullRequestNumber = $hook->pullRequestNumber;
+			$build->branchName = $hook->branchName;
+			$build->commit = $hook->commit;
+			$build->repository = $hook->repository;
+			$this->createTestServersRepository->persistAndFlush($build);
 
-			$this->createTestServerProducer->publish($createTestServer->id);
+			$this->createTestServerProducer->publish($build->id);
 			$this->statusPublicator->publish($build);
 		} else {
+			$build->commit = $hook->commit;
+			$build = $this->createTestServersRepository->persistAndFlush($build);
+
 			$this->statusPublicator->publish($build);
 		}
 

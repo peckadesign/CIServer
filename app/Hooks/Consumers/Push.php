@@ -29,6 +29,8 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 		$repositoryName = strtolower($hookJson['repositoryName']);
 		$branchName = $hookJson['branchName'];
 
+		$this->logger->addInfo('Aktualizovaná větev je "' . $branchName . '"');
+
 		$e = NULL;
 		set_error_handler(function ($errno, $errstr) use (&$e) {
 			throw new \Exception($errstr, $errno);
@@ -69,7 +71,7 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 
 					try {
 						$currentBranch = $this->runProcess('git symbolic-ref --short HEAD');
-						$this->logger->addInfo('Aktuální větev ' . $currentBranch);
+						$this->logger->addInfo('Větev instance je "' . $currentBranch . '"');
 					} catch (\Exception $e) {
 						throw new \Exception('Nepodařilo na získat název aktuální větve', $e->getCode(), $e);
 					}
