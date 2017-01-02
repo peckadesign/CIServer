@@ -28,7 +28,7 @@ shift $((OPTIND-1))
 
 printf "Připravím document_root: "
 rm -rf /var/www/${REPO_NAME}/test${ISSUE_NUMBER}
-cp -R /var/www/$REPO_NAME/staging /var/www/${REPO_NAME}/test${ISSUE_NUMBER}
+cp -RpP /var/www/$REPO_NAME/staging /var/www/${REPO_NAME}/test${ISSUE_NUMBER}
 cd /var/www/${REPO_NAME}/test${ISSUE_NUMBER}
 git clean -xdf temp/ log/
 printf "OK\n"
