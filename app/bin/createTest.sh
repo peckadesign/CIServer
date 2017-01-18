@@ -31,6 +31,7 @@ rm -rf /var/www/${REPO_NAME}/test${ISSUE_NUMBER}
 cp -RpP /var/www/$REPO_NAME/staging /var/www/${REPO_NAME}/test${ISSUE_NUMBER}
 cd /var/www/${REPO_NAME}/test${ISSUE_NUMBER}
 git clean -xdf temp/ log/
+git reset origin/master --hard
 printf "OK\n"
 
 printf "Přepnu větev:\n"
