@@ -216,4 +216,6 @@ services:
 
 	-
 		class: CI\Builds\Tests\Consumers\RunTests
+		arguments:
+			logger: @Kdyby\Monolog\Logger::channel('runTests')
 
