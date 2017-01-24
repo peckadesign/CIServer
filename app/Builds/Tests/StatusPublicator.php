@@ -79,7 +79,7 @@ class StatusPublicator implements IStatusPublicator
 			$state,
 			$message,
 			'Automatické testy',
-			$this->linkGenerator->link('//DashBoard:BuildRequest:', [$buildRequest->id])
+			$this->linkGenerator->link('DashBoard:BuildRequest:', [$buildRequest->id])
 		);
 	}
 }
