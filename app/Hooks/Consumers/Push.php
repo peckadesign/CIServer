@@ -74,8 +74,6 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 
 					chdir($instanceDirectory);
 
-					$this->runProcess('git fetch --prune');
-
 					try {
 						$currentBranch = $this->runProcess('git symbolic-ref --short HEAD');
 						$this->logger->addInfo('Větev instance je "' . $currentBranch . '"');
@@ -86,6 +84,8 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 					if ($branchName !== 'refs/heads/' . $currentBranch) {
 						throw new \CI\Hooks\SkipException('Do změn nepřišla aktuální větev');
 					}
+
+					$this->runProcess('git fetch --prune');
 
 					$this->runProcess('git reset origin/' . $currentBranch . ' --hard');
 
