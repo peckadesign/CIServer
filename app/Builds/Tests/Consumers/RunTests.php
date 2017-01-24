@@ -77,7 +77,8 @@ class RunTests implements \Kdyby\RabbitMq\IConsumer
 
 			chdir($instancePath);
 
-			if ( ! is_readable('Makefile') || ! ($content = file_get_contents('Makefile')) || ! strpos($content, 'run-tests:') !== FALSE) {
+			if ( ! is_readable('Makefile') || ! ($content = file_get_contents('Makefile')) || strpos($content, 'run-tests:') === FALSE) {
+				$this->logger->addNotice('Instance neobsahuje příkaz pro spuštění testů');
 				return self::MSG_REJECT;
 			}
 
