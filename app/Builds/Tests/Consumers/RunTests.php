@@ -54,7 +54,8 @@ class RunTests implements \Kdyby\RabbitMq\IConsumer
 			return self::MSG_REJECT;
 		}
 
-		$repositoryName = strtolower($messageJson['repositoryName']);
+		$repositoryName = $messageJson['repositoryName'];
+		$repositoryDirName = strtolower($messageJson['repositoryName']);
 		$instanceDirectory = $messageJson['instanceDirectory'];
 
 		$this->logger->addInfo('Budou spuštěny testy pro repozitář "' . $repositoryName . '" a instanci "' . $instanceDirectory . '"');
@@ -68,8 +69,7 @@ class RunTests implements \Kdyby\RabbitMq\IConsumer
 		$buildRequest = NULL;
 
 		try {
-
-			$instancePath = '/var/www/' . $repositoryName . '/' . $instanceDirectory;
+			$instancePath = '/var/www/' . $repositoryDirName . '/' . $instanceDirectory;
 
 			if ( ! is_readable($instancePath)) {
 				throw new \Exception('Instance nebyla na serveru nalezena');
