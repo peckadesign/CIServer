@@ -101,7 +101,7 @@ rabbitmq:
 			callback: [@CI\Builds\CreateTestServer\Consumers\CreateTestServer, process]
 		push:
 			exchange: {name: 'push', type: direct}
-			queue: {name: 'runTests'}
+			queue: {name: 'push'}
 			callback: [@CI\Hooks\Consumers\Push, process]
 		runTests:
 			exchange: {name: 'runTests', type: direct}
