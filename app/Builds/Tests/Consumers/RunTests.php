@@ -79,6 +79,7 @@ class RunTests implements \Kdyby\RabbitMq\IConsumer
 
 			if ( ! is_readable('Makefile') || ! ($content = file_get_contents('Makefile')) || strpos($content, 'run-tests:') === FALSE) {
 				$this->logger->addNotice('Instance neobsahuje příkaz pro spuštění testů');
+
 				return self::MSG_REJECT;
 			}
 
@@ -132,8 +133,10 @@ class RunTests implements \Kdyby\RabbitMq\IConsumer
 			$success = TRUE;
 		} catch (\Exception $e) {
 			$this->logger->addError($e);
-			$buildRequest->finish = $this->dateTimeProvider->getDateTime();
-			$buildRequest = $this->buildRequestsRepository->persistAndFlush($buildRequest);
+			if ($buildRequest) {
+				$buildRequest->finish = $this->dateTimeProvider->getDateTime();
+				$buildRequest = $this->buildRequestsRepository->persistAndFlush($buildRequest);
+			}
 		} finally {
 			if (file_exists($instancePath . '/output.tap')) {
 				try {
