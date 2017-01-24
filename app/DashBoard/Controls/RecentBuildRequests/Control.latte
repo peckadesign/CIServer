@@ -5,9 +5,8 @@
 	<div class="panel-body">
 		<dl>
 			{foreach $buildRequests as $buildRequest}
-				<dt><a href="{plink :DashBoard:BuildRequest:default $buildRequest->id}">{$buildRequest->repository->name}:{$buildRequest->branch} ({$buildRequest->commit|substr:0,8})</a></dt>
-				<dd><span n:class="glyphicon, ! $buildRequest->failed ? glyphicon-ok, $buildRequest->failed ? glyphicon-exclamation-sign" aria-hidden="true"></span></dd>
-				<dd>{$buildRequest->start|date}</dd>
+				<dt><span n:class="glyphicon, ! $buildRequest->failed ? glyphicon-ok, $buildRequest->failed ? glyphicon-exclamation-sign" aria-hidden="true"></span> <a href="{plink :DashBoard:BuildRequest:default $buildRequest->id}">{$buildRequest->repository->name}:{$buildRequest->branchName} ({$buildRequest->commit|substr:0,8})</a></dt>
+				<dd>{$buildRequest->start|dateTime}</dd>
 			{/foreach}
 		</dl>
 	</div>

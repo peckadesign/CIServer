@@ -77,6 +77,10 @@ rabbitmq:
 		push:
 			exchange: {name: 'push', type: direct}
 			contentType: text/plain
+		tests:
+			exchange: {name: 'tests', type: direct}
+			contentType: text/plain
+
 
 	consumers:
 		openedPullRequest:
@@ -97,8 +101,12 @@ rabbitmq:
 			callback: [@CI\Builds\CreateTestServer\Consumers\CreateTestServer, process]
 		push:
 			exchange: {name: 'push', type: direct}
-			queue: {name: 'push'}
+			queue: {name: 'runTests'}
 			callback: [@CI\Hooks\Consumers\Push, process]
+		runTests:
+			exchange: {name: 'runTests', type: direct}
+			queue: {name: 'runTests'}
+			callback: [@CI\Builds\Tests\Consumers\RunTests, process]
 
 
 services:
@@ -141,7 +149,8 @@ services:
 	-
 		class: CI\Hooks\Consumers\Push
 		arguments:
-			- @Kdyby\Monolog\Logger::channel('push')
+			logger: @Kdyby\Monolog\Logger::channel('push')
+			runTestsProducer: @Kdyby\RabbitMq\Connection::getProducer('runTestsProducer')
 
 	-
 		class: CI\Builds\Tests\Commands\BuildCommand
@@ -204,3 +213,7 @@ services:
 			- %rabbitmq.connection.user%
 			- %rabbitmq.connection.password%
 			- %rabbitmq.connection.vhost%
+
+	-
+		class: CI\Builds\Tests\Consumers\RunTests
+

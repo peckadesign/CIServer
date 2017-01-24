@@ -10,11 +10,18 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 	 */
 	private $logger;
 
+	/**
+	 * @var \Kdyby\RabbitMq\IProducer
+	 */
+	private $runTestsProducer;
+
 
 	public function __construct(
-		\Monolog\Logger $logger
+		\Monolog\Logger $logger,
+		\Kdyby\RabbitMq\IProducer $runTestsProducer
 	) {
 		$this->logger = $logger;
+		$this->runTestsProducer = $runTestsProducer;
 	}
 
 
@@ -92,6 +99,11 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 							$this->runProcess('git clean -dfX temp');
 						}
 					}
+
+					if (is_readable('Makefile') && ($content = file_get_contents('Makefile')) && strpos($content, 'run-tests:') !== FALSE) {
+						$this->runTestsProducer->publish(\Nette\Utils\Json::encode(['repositoryName' => $repositoryName, 'instanceDirectory' => $instanceDirectory]));
+					}
+
 				} catch(\CI\Hooks\SkipException $e) {
 					$this->logger->addInfo($e->getMessage());
 					continue;
