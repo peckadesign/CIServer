@@ -112,6 +112,8 @@ class RunTests implements \Kdyby\RabbitMq\IConsumer
 			$buildRequest->branchName = $currentBranch;
 			$buildRequest = $this->buildRequestsRepository->persistAndFlush($buildRequest);
 
+			$this->statusPublicator->publish($buildRequest);
+
 			$this->runProcess('HOME=/home/' . get_current_user() . ' make run-tests');
 			$tapOutput = file_get_contents($instancePath . '/output.tap');
 			if ( ! $tapOutput) {
@@ -124,11 +126,13 @@ class RunTests implements \Kdyby\RabbitMq\IConsumer
 			$buildRequest->failed = $tap->getFailed();
 			$buildRequest->output = $tapOutput;
 			$buildRequest->finish = $this->dateTimeProvider->getDateTime();
-
 			$this->buildRequestsRepository->persistAndFlush($buildRequest);
+
 			$success = TRUE;
 		} catch (\Exception $e) {
 			$this->logger->addError($e);
+			$buildRequest->finish = $this->dateTimeProvider->getDateTime();
+			$buildRequest = $this->buildRequestsRepository->persistAndFlush($buildRequest);
 		} finally {
 			if (file_exists($instancePath . '/output.tap')) {
 				try {
