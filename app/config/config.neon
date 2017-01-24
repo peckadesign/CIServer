@@ -77,8 +77,8 @@ rabbitmq:
 		push:
 			exchange: {name: 'push', type: direct}
 			contentType: text/plain
-		tests:
-			exchange: {name: 'tests', type: direct}
+		runTests:
+			exchange: {name: 'runTests', type: direct}
 			contentType: text/plain
 
 
@@ -150,7 +150,7 @@ services:
 		class: CI\Hooks\Consumers\Push
 		arguments:
 			logger: @Kdyby\Monolog\Logger::channel('push')
-			runTestsProducer: @Kdyby\RabbitMq\Connection::getProducer('runTestsProducer')
+			runTestsProducer: @Kdyby\RabbitMq\Connection::getProducer('runTests')
 
 	-
 		class: CI\Builds\Tests\Commands\BuildCommand
