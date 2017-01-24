@@ -1,5 +1,5 @@
 Vagrant.configure(2) do |config|
-	config.vm.box = "ubuntu/trusty64"
+	config.vm.box = "debian/contrib-jessie64"
 	config.vbguest.auto_update = true
 	config.vm.provision :shell, path: "vagrant/server/bootstrap.sh"
 	config.vm.provision :shell, path: "vagrant/server/install.sh", privileged: false

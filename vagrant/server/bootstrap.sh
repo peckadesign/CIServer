@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-add-apt-repository ppa:ondrej/php
+echo "deb http://packages.dotdeb.org jessie all" > /etc/apt/sources.list.d/dotdeb.list
+wget https://www.dotdeb.org/dotdeb.gpg -qO- | apt-key add -
+
 
 apt-get install software-properties-common
 apt-key adv --recv-keys --keyserver hkp://keyserver.ubuntu.com:80 0xcbcb082a1bb943db
@@ -25,13 +27,13 @@ apt-get install -y --force-yes \
 	apache2 \
 	php7.0 \
 	libapache2-mod-php7.0 \
-	php-xdebug \
+	php7.0-xdebug \
 	php-curl \
 	php-xml \
 	php-zip \
 	php-mysql \
 	php-mbstring \
-	php-bcmath
+	php7.0-bcmath
 
 a2enmod rewrite
 
@@ -76,7 +78,7 @@ fi
 chmod -R 0777 "/vagrant/temp" "/vagrant/log"
 
 
-mysql --user=root --password="ci" --execute="CREATE IF NOT EXISTS DATABASE ci";
+mysql --user=root --password="ci" --execute="CREATE DATABASE IF NOT EXISTS ci";
 mysql --user=root --password="ci" --execute="GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY 'ci';"
 sed -ie "s/^bind-address/#bind-address/g" "/etc/mysql/my.cnf"
 service mysql restart
