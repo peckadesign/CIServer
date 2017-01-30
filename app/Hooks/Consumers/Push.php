@@ -61,14 +61,23 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 			};
 			$instances = array_filter($instances, $cb);
 
+			$cb = function ($file) {
+				if ( ! is_dir($file)) {
+					return FALSE;
+				}
+				if ( ! is_dir($file . '/.git')) {
+					return FALSE;
+				}
+
+				return TRUE;
+			};
+			$instances = array_filter($instances, $cb);
+
 			if ( ! count($instances)) {
 				throw new \Exception('Nebyly nalezeny žádné instance repozitáře');
 			}
 
 			foreach ($instances as $instanceDirectory) {
-				if ( ! is_dir($instanceDirectory)) {
-					continue;
-				}
 				try {
 					$this->logger->addInfo('Byla nalezena instance ' . $instanceDirectory);
 
@@ -101,8 +110,11 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 					}
 
 					if (is_readable('Makefile') && ($content = file_get_contents('Makefile')) && strpos($content, 'run-tests:') !== FALSE) {
+						$this->logger->addInfo('Instance obsahuje testy, budou spuštěny');
 						$this->runTestsProducer->publish(\Nette\Utils\Json::encode(['repositoryName' => $repositoryName, 'instanceDirectory' => $instanceDirectory]));
 					}
+
+					$this->logger->addInfo('Aktualizace instance ' . $instanceDirectory . ' dokončena');
 
 				} catch(\CI\Hooks\SkipException $e) {
 					$this->logger->addInfo($e->getMessage());
