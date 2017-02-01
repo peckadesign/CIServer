@@ -109,6 +109,10 @@ rabbitmq:
 			callback: [@CI\Builds\Tests\Consumers\RunTests, process]
 
 
+clock:
+	provider: current
+
+
 services:
 	routerFactory:
 		class: CI\Router\RouterFactory
