@@ -35,6 +35,11 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 	 */
 	private $usersRepository;
 
+	/**
+	 * @var \Kdyby\RabbitMq\IProducer
+	 */
+	private $runTestsProducer;
+
 
 	public function __construct(
 		string $binDir,
@@ -42,7 +47,8 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 		\CI\Builds\CreateTestServer\CreateTestServersRepository $createTestServersRepository,
 		\CI\Builds\CreateTestServer\StatusPublicator $statusPublicator,
 		\Kdyby\Github\Client $gitHub,
-		\CI\User\UsersRepository $usersRepository
+		\CI\User\UsersRepository $usersRepository,
+		\Kdyby\RabbitMq\IProducer $runTestsProducer
 	) {
 		$this->binDir = $binDir;
 		$this->logger = $logger;
@@ -50,6 +56,7 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 		$this->statusPublicator = $statusPublicator;
 		$this->gitHub = $gitHub;
 		$this->usersRepository = $usersRepository;
+		$this->runTestsProducer = $runTestsProducer;
 	}
 
 
@@ -104,6 +111,14 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 
 			$this->runProcess($build, $cmd);
 			$success = TRUE;
+
+			chdir('/var/www/' . strtolower($build->repository->name) . '/' . $testName);
+
+			if (is_readable('Makefile') && ($content = file_get_contents('Makefile')) && strpos($content, 'run-tests:') !== FALSE) {
+				$this->logger->addInfo('Instance obsahuje testy, budou spuštěny');
+				$this->runTestsProducer->publish(\Nette\Utils\Json::encode(['repositoryName' => strtolower($build->repository->name), 'instanceDirectory' => $testName]));
+			}
+
 		} catch (\Symfony\Component\Process\Exception\RuntimeException $e) {
 			$success = FALSE;
 		} finally {
