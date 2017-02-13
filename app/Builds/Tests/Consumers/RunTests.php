@@ -51,6 +51,7 @@ class RunTests implements \Kdyby\RabbitMq\IConsumer
 		try {
 			$messageJson = \Nette\Utils\Json::decode($message->getBody(), \Nette\Utils\Json::FORCE_ARRAY);
 		} catch (\Nette\Utils\JsonException $e) {
+			$this->logger->addNotice('Přijatá data nejsou platná: ' . $e->getMessage());
 			return self::MSG_REJECT;
 		}
 

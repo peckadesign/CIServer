@@ -110,8 +110,9 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 					}
 
 					if (is_readable('Makefile') && ($content = file_get_contents('Makefile')) && strpos($content, 'run-tests:') !== FALSE) {
-						$this->logger->addInfo('Instance obsahuje testy, budou spuštěny');
-						$this->runTestsProducer->publish(\Nette\Utils\Json::encode(['repositoryName' => $repositoryName, 'instanceDirectory' => $instanceDirectory]));
+						$publishData = \Nette\Utils\Json::encode(['repositoryName' => $repositoryName, 'instanceDirectory' => $instanceDirectory]);
+						$this->logger->addInfo('Instance obsahuje testy, budou spuštěny: ' . $publishData);
+						$this->runTestsProducer->publish($publishData);
 					}
 
 					$this->logger->addInfo('Aktualizace instance ' . $instanceDirectory . ' dokončena');
