@@ -9,7 +9,7 @@ $configurator = new Nette\Configurator;
 if (PHP_SAPI === 'cli') {
 	Kdyby\Console\DI\BootstrapHelper::setupMode($configurator);
 } else {
-	$configurator->setDebugMode(FALSE);
+	$configurator->setDebugMode(TRUE);
 }
 
 $configurator->enableDebugger(__DIR__ . '/../log');

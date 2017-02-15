@@ -110,7 +110,6 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 			}
 
 			$this->runProcess($build, $cmd);
-			$success = TRUE;
 
 			chdir('/var/www/' . strtolower($build->repository->name) . '/' . $testName);
 
@@ -119,10 +118,22 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 				$this->runTestsProducer->publish(\Nette\Utils\Json::encode(['repositoryName' => strtolower($build->repository->name), 'instanceDirectory' => $testName]));
 			}
 
+			try {
+				$client = new \GuzzleHttp\Client();
+				$response = $client->request('GET', 'http://' . strtolower($build->repository->name) . '.' . $testName . '.peckadesign.com');
+
+				if ($response->getStatusCode() !== 200) {
+					$success = FALSE;
+				}
+			} catch (\GuzzleHttp\Exception\RequestException $e) {
+				$success = FALSE;
+			}
+
 		} catch (\Symfony\Component\Process\Exception\RuntimeException $e) {
 			$success = FALSE;
 		} finally {
 			$build->finish = new \DateTime();
+			$build->success = $success;
 			$this->createTestServersRepository->persistAndFlush($build);
 		}
 

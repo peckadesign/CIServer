@@ -12,6 +12,7 @@ namespace CI\Builds\CreateTestServer;
  * @property string|NULL $output
  * @property \DateTime|NULL $start
  * @property \DateTime|NULL $finish
+ * @property bool $success
  * @property \CI\GitHub\Repository $repository {m:1 \CI\GitHub\Repository::$createTestServer}
  */
 class CreateTestServer extends \Nextras\Orm\Entity\Entity implements

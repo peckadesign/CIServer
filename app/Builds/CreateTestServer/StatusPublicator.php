@@ -31,8 +31,13 @@ class StatusPublicator
 	public function publish(\CI\Builds\CreateTestServer\CreateTestServer $createTestServer)
 	{
 		if ($createTestServer->finish) {
-			$description = 'Byl vytvořen';
-			$status = \CI\GitHub\StatusPublicator::STATUS_SUCCESS;
+			if ($createTestServer->success) {
+				$description = 'Byl vytvořen';
+				$status = \CI\GitHub\StatusPublicator::STATUS_SUCCESS;
+			} else {
+				$description = 'Došlo k chybě';
+				$status = \CI\GitHub\StatusPublicator::STATUS_FAILURE;
+			}
 		} elseif ($createTestServer->start) {
 			$description = 'Probíhá příprava';
 			$status = \CI\GitHub\StatusPublicator::STATUS_PENDING;
