@@ -35,8 +35,8 @@ class StatusPublicator
 				$description = 'Byl vytvořen';
 				$status = \CI\GitHub\StatusPublicator::STATUS_SUCCESS;
 			} else {
-				$description = 'Došlo k chybě';
-				$status = \CI\GitHub\StatusPublicator::STATUS_FAILURE;
+				$description = 'Byl vytvořen';
+				$status = \CI\GitHub\StatusPublicator::STATUS_SUCCESS;
 			}
 		} elseif ($createTestServer->start) {
 			$description = 'Probíhá příprava';
@@ -52,7 +52,11 @@ class StatusPublicator
 			$status,
 			$description,
 			'Testovací server',
-			$this->linkGenerator->link('TestServer:', [$createTestServer])
+			$status === \CI\GitHub\StatusPublicator::STATUS_SUCCESS
+				?
+				$this->linkGenerator->link('TestServer:', [$createTestServer])
+				:
+				$this->linkGenerator->link('DashBoard:CreateTestServer:default', [$createTestServer->id])
 		);
 	}
 }

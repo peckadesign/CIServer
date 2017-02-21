@@ -195,7 +195,6 @@ services:
 	-
 		class: CI\Builds\CreateTestServer\Consumers\CreateTestServer
 		arguments:
-			binDir: %binDir%
 			logger: @Kdyby\Monolog\Logger::channel('createTest')
 			runTestsProducer: @Kdyby\RabbitMq\Connection::getProducer('runTests')
 

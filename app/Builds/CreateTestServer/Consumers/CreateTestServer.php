@@ -6,11 +6,6 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 {
 
 	/**
-	 * @var string
-	 */
-	private $binDir;
-
-	/**
 	 * @var \Monolog\Logger
 	 */
 	private $logger;
@@ -50,7 +45,6 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 		\CI\User\UsersRepository $usersRepository,
 		\Kdyby\RabbitMq\IProducer $runTestsProducer
 	) {
-		$this->binDir = $binDir;
 		$this->logger = $logger;
 		$this->createTestServersRepository = $createTestServersRepository;
 		$this->statusPublicator = $statusPublicator;
@@ -96,8 +90,18 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 
 		try {
 			$success = TRUE;
-			$cmd = sprintf('./createTest.sh -r %s -i %d -b %s', strtolower($build->repository->name), $build->pullRequestNumber, $build->branchName);
-			$this->runProcess($build, $cmd);
+
+			$this->runProcess($build, 'OLD_DIR=`pwd` && cd .. && rm -rf $OLD_DIR && cp -RpP staging $OLD_DIR');
+
+			$this->runProcess($build, 'git clean -xdf temp/ log/');
+			$this->runProcess($build, 'git reset origin/master --hard');
+
+			$this->runProcess($build, 'git fetch --prune');
+			$this->runProcess($build, 'git checkout ' . $build->branchName);
+			$this->runProcess($build, 'chmod -R 0777 temp/ log/');
+
+			$this->runProcess($build, 'make clean');
+			$this->runProcess($build, 'make build-staging');
 
 			$defaultLocalNeonPath = '/var/www/' . strtolower($build->repository->name) . '/local.neon';
 			if (is_readable($defaultLocalNeonPath)) {
@@ -108,7 +112,6 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 					$cmd = sprintf('sed "s/testX/%s/" < %s > /var/www/%s/%s/app/config/local.neon', 'staging', $defaultLocalNeonPath, strtolower($build->repository->name), $testName);
 				}
 			}
-
 			$this->runProcess($build, $cmd);
 
 			chdir('/var/www/' . strtolower($build->repository->name) . '/' . $testName);
@@ -120,7 +123,9 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 
 			try {
 				$client = new \GuzzleHttp\Client();
-				$response = $client->request('GET', 'http://' . strtolower($build->repository->name) . '.' . $testName . '.peckadesign.com');
+				$testUrl = 'http://' . strtolower($build->repository->name) . '.' . $testName . '.peckadesign.com';
+				$response = $client->request('GET', $testUrl);
+				$build->output .= PHP_EOL . $testUrl . ': ' . $response->getStatusCode() . PHP_EOL;
 
 				if ($response->getStatusCode() !== 200) {
 					$success = FALSE;
@@ -139,21 +144,32 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 
 		$this->statusPublicator->publish($build);
 
-		if ($success) {
-			return self::MSG_ACK;
-		} else {
-			return self::MSG_REJECT_REQUEUE;
-		}
+		return self::MSG_ACK;
 	}
 
 
 	private function runProcess(\CI\Builds\CreateTestServer\CreateTestServer $build, string $cmd)
 	{
-		$build->output .= trim($cmd) . "\n";
+		$build->output .= '> ' . trim($cmd) . "\n";
+
+		$cwd = '/var/www/' . strtolower($build->repository->name) . '/' . 'test' . $build->pullRequestNumber;
+
+		try {
+			\Nette\Utils\FileSystem::createDir($cwd, 755);
+		} catch (\Nette\IOException $e) {
+			$build->output .= $e->getMessage();
+			$this->createTestServersRepository->persistAndFlush($build);
+
+			$this->logger->addError($e->getMessage());
+
+			throw $e;
+		}
+
 		$env = [
 			'HOME' => getenv('HOME'),
 		];
-		$process = new \Symfony\Component\Process\Process($cmd, $this->binDir, $env, NULL, NULL);
+
+		$process = new \Symfony\Component\Process\Process($cmd, $cwd, $env, NULL, NULL);
 		try {
 			$cb = function (string $type, string $buffer) use ($build) {
 				$build->output .= $buffer;
