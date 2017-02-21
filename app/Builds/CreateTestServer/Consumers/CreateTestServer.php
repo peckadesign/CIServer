@@ -37,7 +37,6 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 
 
 	public function __construct(
-		string $binDir,
 		\Monolog\Logger $logger,
 		\CI\Builds\CreateTestServer\CreateTestServersRepository $createTestServersRepository,
 		\CI\Builds\CreateTestServer\StatusPublicator $statusPublicator,
