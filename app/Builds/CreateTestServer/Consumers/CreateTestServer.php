@@ -100,7 +100,7 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 			$this->runProcess($build, 'chmod -R 0777 temp/ log/');
 
 			$this->runProcess($build, 'make clean');
-			$this->runProcess($build, 'make build-staging');
+			$this->runProcess($build, 'HOME=/home/' . get_current_user() . ' make build-staging');
 
 			$defaultLocalNeonPath = '/var/www/' . strtolower($build->repository->name) . '/local.neon';
 			if (is_readable($defaultLocalNeonPath)) {
