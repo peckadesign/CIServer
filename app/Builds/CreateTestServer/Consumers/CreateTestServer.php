@@ -166,6 +166,7 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 
 		$env = [
 			'HOME' => getenv('HOME'),
+			'PATH' => getenv('PATH'),
 		];
 
 		$process = new \Symfony\Component\Process\Process($cmd, $cwd, $env, NULL, NULL);
