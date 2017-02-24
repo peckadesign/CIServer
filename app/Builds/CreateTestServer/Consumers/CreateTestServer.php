@@ -164,12 +164,7 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 			throw $e;
 		}
 
-		$env = [
-			'HOME' => getenv('HOME'),
-			'PATH' => getenv('PATH'),
-		];
-
-		$process = new \Symfony\Component\Process\Process($cmd, $cwd, $env, NULL, NULL);
+		$process = new \Symfony\Component\Process\Process($cmd, $cwd, NULL, NULL, NULL);
 		try {
 			$cb = function (string $type, string $buffer) use ($build) {
 				$build->output .= $buffer;
