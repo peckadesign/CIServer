@@ -80,6 +80,9 @@ rabbitmq:
 		runTests:
 			exchange: {name: 'runTests', type: direct}
 			contentType: text/plain
+		phpCs:
+			exchange: {name: 'phpCs', type: direct}
+			contentType: text/plain
 
 
 	consumers:
@@ -107,6 +110,10 @@ rabbitmq:
 			exchange: {name: 'runTests', type: direct}
 			queue: {name: 'runTests'}
 			callback: [@CI\Builds\Tests\Consumers\RunTests, process]
+		phpCs:
+			exchange: {name: 'phpCs', type: direct}
+			queue: {name: 'phpCs'}
+			callback: [@CI\Builds\PhpCs\Consumers\RunPhpCs, process]
 
 
 clock:
@@ -155,6 +162,7 @@ services:
 		arguments:
 			logger: @Kdyby\Monolog\Logger::channel('push')
 			runTestsProducer: @Kdyby\RabbitMq\Connection::getProducer('runTests')
+			runPhpCsProducer: @Kdyby\RabbitMq\Connection::getProducer('runPhpCs')
 
 	-
 		class: CI\Builds\Tests\Commands\BuildCommand
@@ -223,3 +231,10 @@ services:
 		arguments:
 			logger: @Kdyby\Monolog\Logger::channel('runTests')
 
+	-
+		class: CI\Builds\PhpCs\Consumers\RunPhpCs
+		arguments:
+			logger: @Kdyby\Monolog\Logger::channel('phpCs')
+
+	-
+		class: CI\Builds\PhpCs\StatusPublicator

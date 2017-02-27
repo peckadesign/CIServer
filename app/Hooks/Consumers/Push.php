@@ -15,13 +15,20 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 	 */
 	private $runTestsProducer;
 
+	/**
+	 * @var \Kdyby\RabbitMq\IProducer
+	 */
+	private $runPhpCsProducer;
+
 
 	public function __construct(
 		\Monolog\Logger $logger,
-		\Kdyby\RabbitMq\IProducer $runTestsProducer
+		\Kdyby\RabbitMq\IProducer $runTestsProducer,
+		\Kdyby\RabbitMq\IProducer $runPhpCsProducer
 	) {
 		$this->logger = $logger;
 		$this->runTestsProducer = $runTestsProducer;
+		$this->runPhpCsProducer = $runPhpCsProducer;
 	}
 
 
@@ -113,6 +120,12 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 						$publishData = \Nette\Utils\Json::encode(['repositoryName' => $repositoryName, 'instanceDirectory' => $instanceDirectory]);
 						$this->logger->addInfo('Instance obsahuje testy, budou spuštěny: ' . $publishData);
 						$this->runTestsProducer->publish($publishData);
+					}
+
+					if (is_readable('Makefile') && ($content = file_get_contents('Makefile')) && strpos($content, 'cs:') !== FALSE) {
+						$publishData = \Nette\Utils\Json::encode(['repositoryName' => $repositoryName, 'instanceDirectory' => $instanceDirectory]);
+						$this->logger->addInfo('Instance obsahuje coding standard, bude spuštěn: ' . $publishData);
+						$this->runPhpCsProducer->publish($publishData);
 					}
 
 					$this->logger->addInfo('Aktualizace instance ' . $instanceDirectory . ' dokončena');

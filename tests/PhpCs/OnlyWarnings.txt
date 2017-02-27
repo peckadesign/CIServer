@@ -1,0 +1,20 @@
+FILE: ...grant/app/models/Orders/DeliveryMethods/Forms/DeliveryMethod.php
+----------------------------------------------------------------------
+FOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE
+----------------------------------------------------------------------
+ 1 | WARNING | No PHP code was found in this file and short open tags
+   |         | are not allowed by this install of PHP. This file may
+   |         | be using short open tags but PHP does not allow them.
+----------------------------------------------------------------------
+
+
+FILE: /vagrant/app/models/Product/Insurance/Insurances.php
+----------------------------------------------------------------------
+FOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE
+----------------------------------------------------------------------
+ 1 | WARNING | No PHP code was found in this file and short open tags
+   |         | are not allowed by this install of PHP. This file may
+   |         | be using short open tags but PHP does not allow them.
+----------------------------------------------------------------------
+
+Time: 19.52 secs; Memory: 48Mb

@@ -44,7 +44,7 @@ class StatusPublicator
 		string $state,
 		string $description,
 		string $context,
-		string $link
+		string $link = NULL
 	) {
 		$conditions = [
 			'systemUser' => TRUE,
@@ -59,8 +59,11 @@ class StatusPublicator
 			'state' => $state,
 			'description' => $description,
 			'context' => 'Pecka CI' . ' / ' . $context,
-			'target_url' => $link,
 		];
+
+		if ($link) {
+			$body['target_url'] = $link;
+		}
 
 		$this->logger->addInfo(
 			sprintf('Pro commit %s je nastavován status "%s" a odkaz "%s"', $commit, $body['description'], $link)
