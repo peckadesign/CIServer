@@ -88,7 +88,7 @@ class RunPhpCs implements \Kdyby\RabbitMq\IConsumer
 			}
 
 			$this->runProcess('make cs');
-			$output = file_get_contents($instancePath . '/output.log');
+			$output = file_get_contents($instancePath . '/output.cs');
 			if ( ! $output) {
 				throw new \CI\Exception('Nepodařilo se dohledat výstup kontroly coding standardů');
 			}
@@ -100,9 +100,9 @@ class RunPhpCs implements \Kdyby\RabbitMq\IConsumer
 		} catch (\Exception $e) {
 			$this->logger->addError($e);
 		} finally {
-			if (file_exists($instancePath . '/output.log')) {
+			if (file_exists($instancePath . '/output.cs')) {
 				try {
-					\Nette\Utils\FileSystem::delete($instancePath . '/output.log');
+					\Nette\Utils\FileSystem::delete($instancePath . '/output.cs');
 				} catch (\Nette\IOException $e) {
 					$this->logger->addError($e);
 				}
