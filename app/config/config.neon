@@ -80,8 +80,8 @@ rabbitmq:
 		runTests:
 			exchange: {name: 'runTests', type: direct}
 			contentType: text/plain
-		phpCs:
-			exchange: {name: 'phpCs', type: direct}
+		runPhpCs:
+			exchange: {name: 'runPhpCs', type: direct}
 			contentType: text/plain
 
 
@@ -110,8 +110,8 @@ rabbitmq:
 			exchange: {name: 'runTests', type: direct}
 			queue: {name: 'runTests'}
 			callback: [@CI\Builds\Tests\Consumers\RunTests, process]
-		phpCs:
-			exchange: {name: 'phpCs', type: direct}
+		runPhpCs:
+			exchange: {name: 'runPhpCs', type: direct}
 			queue: {name: 'phpCs'}
 			callback: [@CI\Builds\PhpCs\Consumers\RunPhpCs, process]
 
