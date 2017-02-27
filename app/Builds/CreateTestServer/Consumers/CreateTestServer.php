@@ -92,14 +92,14 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 
 			$this->runProcess($build, 'OLD_DIR=`pwd` && cd .. && rm -rf $OLD_DIR && cp -RpP staging $OLD_DIR');
 
-			$this->runProcess($build, '[[ -d temp/ ]] && git clean -xdf temp/');
-			$this->runProcess($build, '[[ -d log/ ]] && git clean -xdf log/');
+			$this->runProcess($build, 'test -d temp/ && git clean -xdf temp/');
+			$this->runProcess($build, 'test -d log/ && git clean -xdf log/');
 			$this->runProcess($build, 'git reset origin/master --hard');
 
 			$this->runProcess($build, 'git fetch --prune');
 			$this->runProcess($build, 'git checkout ' . $build->branchName);
-			$this->runProcess($build, '[[ -d temp/ ]] && chmod -R 0777 temp/');
-			$this->runProcess($build, '[[ -d log/ ]] && chmod -R 0777 log/');
+			$this->runProcess($build, 'test -d temp/ && chmod -R 0777 temp/');
+			$this->runProcess($build, 'test -d log/ && chmod -R 0777 log/');
 
 			$this->runProcess($build, 'make clean');
 			$this->runProcess($build, 'HOME=/home/' . get_current_user() . ' make build-staging');
