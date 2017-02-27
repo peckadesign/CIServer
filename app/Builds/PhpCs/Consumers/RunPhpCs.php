@@ -16,7 +16,7 @@ class RunPhpCs implements \Kdyby\RabbitMq\IConsumer
 	private $dateTimeProvider;
 
 	/**
-	 * @var \CI\Builds\Tests\StatusPublicator
+	 * @var \CI\Builds\PhpCs\StatusPublicator
 	 */
 	private $statusPublicator;
 
@@ -25,8 +25,14 @@ class RunPhpCs implements \Kdyby\RabbitMq\IConsumer
 	 */
 	private $repositoriesRepository;
 
+	/**
+	 * @var string
+	 */
+	private $logDirectory;
+
 
 	public function __construct(
+		string $logDirectory,
 		\Monolog\Logger $logger,
 		\Kdyby\Clock\IDateTimeProvider $dateTimeProvider,
 		\CI\Builds\PhpCs\StatusPublicator $statusPublicator,
@@ -36,6 +42,7 @@ class RunPhpCs implements \Kdyby\RabbitMq\IConsumer
 		$this->dateTimeProvider = $dateTimeProvider;
 		$this->statusPublicator = $statusPublicator;
 		$this->repositoriesRepository = $repositoriesRepository;
+		$this->logDirectory = $logDirectory;
 	}
 
 
@@ -92,6 +99,16 @@ class RunPhpCs implements \Kdyby\RabbitMq\IConsumer
 			if ( ! $output) {
 				throw new \CI\Exception('Nepodařilo se dohledat výstup kontroly coding standardů');
 			}
+
+			\Nette\Utils\FileSystem::copy(
+				$instancePath . '/output.cs',
+				sprintf(
+					'%s/%s/%s.cs',
+					$this->logDirectory,
+					$this->dateTimeProvider->getDateTime()->format('Y-m'),
+					$currentCommit
+				)
+			);
 
 			$phpCs = new \CI\PhpCs\PhpCs($output);
 
