@@ -11,11 +11,6 @@ class RunPhpCs implements \Kdyby\RabbitMq\IConsumer
 	private $logger;
 
 	/**
-	 * @var \Kdyby\Clock\IDateTimeProvider
-	 */
-	private $dateTimeProvider;
-
-	/**
 	 * @var \CI\Builds\PhpCs\StatusPublicator
 	 */
 	private $statusPublicator;
@@ -34,12 +29,10 @@ class RunPhpCs implements \Kdyby\RabbitMq\IConsumer
 	public function __construct(
 		string $logDirectory,
 		\Monolog\Logger $logger,
-		\Kdyby\Clock\IDateTimeProvider $dateTimeProvider,
 		\CI\Builds\PhpCs\StatusPublicator $statusPublicator,
 		\CI\GitHub\RepositoriesRepository $repositoriesRepository
 	) {
 		$this->logger = $logger;
-		$this->dateTimeProvider = $dateTimeProvider;
 		$this->statusPublicator = $statusPublicator;
 		$this->repositoriesRepository = $repositoriesRepository;
 		$this->logDirectory = $logDirectory;
@@ -103,9 +96,8 @@ class RunPhpCs implements \Kdyby\RabbitMq\IConsumer
 			\Nette\Utils\FileSystem::copy(
 				$instancePath . '/output.cs',
 				sprintf(
-					'%s/%s/%s.cs',
+					'%s/%s.cs',
 					$this->logDirectory,
-					$this->dateTimeProvider->getDateTime()->format('Y-m'),
 					$currentCommit
 				)
 			);

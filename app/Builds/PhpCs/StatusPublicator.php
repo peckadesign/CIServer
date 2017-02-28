@@ -55,7 +55,8 @@ class StatusPublicator
 			$commit,
 			$state,
 			$message,
-			'Coding standard'
+			'Coding standard',
+			$this->linkGenerator->link('DashBoard:PhpCs:output', [$commit])
 		);
 	}
 }

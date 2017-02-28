@@ -235,7 +235,12 @@ services:
 		class: CI\Builds\PhpCs\Consumers\RunPhpCs
 		arguments:
 			logger: @Kdyby\Monolog\Logger::channel('phpCs')
-			logDirectory: %logDir%/phpcs
+			logDirectory: %logDir%/phpcs/outputs
 
 	-
 		class: CI\Builds\PhpCs\StatusPublicator
+
+	-
+		class: CI\DashBoard\Presenters\PhpCsPresenter
+		arguments:
+			outputDirectory: %logDir%/phpcs/outputs
