@@ -25,6 +25,7 @@ class PhpCsPresenter extends BasePresenter
 			$this->error();
 		}
 
+		$this->getHttpResponse()->setContentType('text/plain');
 		$this->sendResponse(new \Nette\Application\Responses\TextResponse(file_get_contents($filename)));
 	}
 }
