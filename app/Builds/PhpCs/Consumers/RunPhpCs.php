@@ -104,6 +104,8 @@ class RunPhpCs implements \Kdyby\RabbitMq\IConsumer
 
 			$phpCs = new \CI\PhpCs\PhpCs($output);
 
+			$this->logger->addInfo(sprintf('Výstup pro commit %s je %d chyb a %d varování.', $currentCommit, $phpCs->getErrors(), $phpCs->getWarnings()));
+
 			$this->statusPublicator->publish($repository, $currentCommit, $phpCs);
 
 		} catch (\Exception $e) {
