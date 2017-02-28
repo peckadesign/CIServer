@@ -37,7 +37,7 @@ class StatusPublicator
 	 */
 	public function publish(CI\GitHub\Repository $repository, string $commit, CI\PhpCs\PhpCs $phpCs)
 	{
-		if ( ! $phpCs->getWarnings() && ! $phpCs->getWarnings()) {
+		if ( ! $phpCs->getErrors() && ! $phpCs->getWarnings()) {
 			$message = 'Bez chyb';
 			$state = 'success';
 		} else {
