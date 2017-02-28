@@ -205,6 +205,7 @@ services:
 		arguments:
 			logger: @Kdyby\Monolog\Logger::channel('createTest')
 			runTestsProducer: @Kdyby\RabbitMq\Connection::getProducer('runTests')
+			runPhpCsProducer: @Kdyby\RabbitMq\Connection::getProducer('runPhpCs')
 
 	-
 		implement: CI\DashBoard\Controls\RecentCreateTestServer\IFactory

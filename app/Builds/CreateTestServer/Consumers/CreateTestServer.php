@@ -35,6 +35,11 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 	 */
 	private $runTestsProducer;
 
+	/**
+	 * @var \Kdyby\RabbitMq\IProducer
+	 */
+	private $runPhpCsProducer;
+
 
 	public function __construct(
 		\Monolog\Logger $logger,
@@ -42,7 +47,8 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 		\CI\Builds\CreateTestServer\StatusPublicator $statusPublicator,
 		\Kdyby\Github\Client $gitHub,
 		\CI\User\UsersRepository $usersRepository,
-		\Kdyby\RabbitMq\IProducer $runTestsProducer
+		\Kdyby\RabbitMq\IProducer $runTestsProducer,
+		\Kdyby\RabbitMq\IProducer $runPhpCsProducer
 	) {
 		$this->logger = $logger;
 		$this->createTestServersRepository = $createTestServersRepository;
@@ -50,6 +56,7 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 		$this->gitHub = $gitHub;
 		$this->usersRepository = $usersRepository;
 		$this->runTestsProducer = $runTestsProducer;
+		$this->runPhpCsProducer = $runPhpCsProducer;
 	}
 
 
@@ -120,6 +127,12 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 			if (is_readable('Makefile') && ($content = file_get_contents('Makefile')) && strpos($content, 'run-tests:') !== FALSE) {
 				$this->logger->addInfo('Instance obsahuje testy, budou spuštěny');
 				$this->runTestsProducer->publish(\Nette\Utils\Json::encode(['repositoryName' => strtolower($build->repository->name), 'instanceDirectory' => $testName]));
+			}
+
+			if (is_readable('Makefile') && ($content = file_get_contents('Makefile')) && strpos($content, 'cs:') !== FALSE) {
+				$publishData = \Nette\Utils\Json::encode(['repositoryName' => strtolower($build->repository->name), 'instanceDirectory' => $testName]);
+				$this->logger->addInfo('Instance obsahuje coding standard, bude spuštěn: ' . $publishData);
+				$this->runPhpCsProducer->publish($publishData);
 			}
 
 			try {
