@@ -1,0 +1,26 @@
+FILE: .../www/megapixel2012/test3727/app/models/Comment/CommentMapper.php
+----------------------------------------------------------------------
+FOUND 2 ERRORS AFFECTING 2 LINES
+----------------------------------------------------------------------
+ 237 | ERROR | [x] TRUE, FALSE and NULL must be uppercase; expected
+     |       |     "TRUE" but found "true"
+ 242 | ERROR | [x] TRUE, FALSE and NULL must be uppercase; expected
+     |       |     "FALSE" but found "false"
+----------------------------------------------------------------------
+PHPCBF CAN FIX THE 2 MARKED SNIFF VIOLATIONS AUTOMATICALLY
+----------------------------------------------------------------------
+
+
+FILE: ...ar/www/megapixel2012/test3727/app/models/Comment/CommentForm.php
+----------------------------------------------------------------------
+FOUND 3 ERRORS AFFECTING 3 LINES
+----------------------------------------------------------------------
+  28 | ERROR | [x] TRUE, FALSE and NULL must be uppercase; expected
+     |       |     "NULL" but found "null"
+  48 | ERROR | [x] TRUE, FALSE and NULL must be uppercase; expected
+     |       |     "NULL" but found "null"
+ 164 | ERROR | [x] TRUE, FALSE and NULL must be uppercase; expected
+     |       |     "FALSE" but found "false"
+----------------------------------------------------------------------
+PHPCBF CAN FIX THE 3 MARKED SNIFF VIOLATIONS AUTOMATICALLY
+----------------------------------------------------------------------

@@ -14,6 +14,9 @@ class PhpCsTest extends \Tester\TestCase
 			[
 				file_get_contents(__DIR__ . '/OnlyWarnings.txt'), 0, 2,
 			],
+			[
+				file_get_contents(__DIR__ . '/OnlyErrors.txt'), 5, 0,
+			],
 		];
 	}
 

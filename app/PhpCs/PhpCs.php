@@ -51,7 +51,7 @@ class PhpCs
 				continue;
 			}
 
-			preg_match('/^FOUND (?<errors>[0-9]+) ERRORS? AND (?<warnings>[0-9]+) WARNINGS?/', $line, $matches);
+			preg_match('/^FOUND (?<errors>[0-9]+) ERRORS?( AND (?<warnings>[0-9]+) WARNINGS?)?/', $line, $matches);
 
 			isset($matches['errors']) && $this->errors += $matches['errors'];
 			isset($matches['warnings']) && $this->warnings += $matches['warnings'];
