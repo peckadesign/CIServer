@@ -129,12 +129,16 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 						$publishData = \Nette\Utils\Json::encode(['repositoryName' => $repositoryName, 'instanceDirectory' => $instanceDirectory]);
 						$this->logger->addInfo('Instance obsahuje testy, budou spuštěny: ' . $publishData);
 						$this->runTestsProducer->publish($publishData);
+					} else {
+						$this->logger->addInfo('Instance neobsahuje cíl pro spuštění testů');
 					}
 
 					if (is_readable('Makefile') && ($content = file_get_contents('Makefile')) && strpos($content, 'cs:') !== FALSE) {
 						$publishData = \Nette\Utils\Json::encode(['repositoryName' => $repositoryName, 'instanceDirectory' => $instanceDirectory]);
 						$this->logger->addInfo('Instance obsahuje coding standard, bude spuštěn: ' . $publishData);
 						$this->runPhpCsProducer->publish($publishData);
+					} else {
+						$this->logger->addInfo('Instance neobsahuje cíl pro spuštění cs');
 					}
 
 					$this->logger->addInfo('Aktualizace instance ' . $instanceDirectory . ' dokončena');

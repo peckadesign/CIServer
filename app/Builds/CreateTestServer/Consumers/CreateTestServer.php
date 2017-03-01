@@ -133,15 +133,19 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 
 			chdir('/var/www/' . strtolower($build->repository->name) . '/' . $testName);
 
+			$publishData = \Nette\Utils\Json::encode(['repositoryName' => strtolower($build->repository->name), 'instanceDirectory' => $testName]);
 			if (is_readable('Makefile') && ($content = file_get_contents('Makefile')) && strpos($content, 'run-tests:') !== FALSE) {
-				$this->logger->addInfo('Instance obsahuje testy, budou spuštěny');
-				$this->runTestsProducer->publish(\Nette\Utils\Json::encode(['repositoryName' => strtolower($build->repository->name), 'instanceDirectory' => $testName]));
+				$this->logger->addInfo('Instance obsahuje testy, budou spuštěny: ' . $publishData);
+				$this->runTestsProducer->publish($publishData);
+			} else {
+				$this->logger->addInfo('Instance neobsahuje cíl pro spuštění testů');
 			}
 
 			if (is_readable('Makefile') && ($content = file_get_contents('Makefile')) && strpos($content, 'cs:') !== FALSE) {
-				$publishData = \Nette\Utils\Json::encode(['repositoryName' => strtolower($build->repository->name), 'instanceDirectory' => $testName]);
 				$this->logger->addInfo('Instance obsahuje coding standard, bude spuštěn: ' . $publishData);
 				$this->runPhpCsProducer->publish($publishData);
+			} else {
+				$this->logger->addInfo('Instance neobsahuje cíl pro spuštění cs');
 			}
 
 			try {
@@ -174,6 +178,7 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 	private function runProcess(\CI\Builds\CreateTestServer\CreateTestServer $build, string $cmd)
 	{
 		$build->output .= '> ' . trim($cmd) . "\n";
+		$this->logger->addInfo('> ' . trim($cmd));
 
 		$cwd = '/var/www/' . strtolower($build->repository->name) . '/' . 'test' . $build->pullRequestNumber;
 
@@ -193,6 +198,7 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 			$cb = function (string $type, string $buffer) use ($build) {
 				$build->output .= $buffer;
 				$this->createTestServersRepository->persistAndFlush($build);
+				$this->logger->addInfo(trim($buffer));
 			};
 			$process->mustRun($cb);
 		} catch (\Symfony\Component\Process\Exception\RuntimeException $e) {
