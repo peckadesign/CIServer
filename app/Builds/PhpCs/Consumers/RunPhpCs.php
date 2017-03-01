@@ -43,6 +43,7 @@ class RunPhpCs implements \Kdyby\RabbitMq\IConsumer
 	{
 		try {
 			$messageJson = \Nette\Utils\Json::decode($message->getBody(), \Nette\Utils\Json::FORCE_ARRAY);
+			$this->logger->addNotice('Přijatá data jsou: ' . $message->getBody());
 		} catch (\Nette\Utils\JsonException $e) {
 			$this->logger->addNotice('Přijatá data nejsou platná: ' . $e->getMessage());
 			return self::MSG_REJECT;
@@ -52,7 +53,7 @@ class RunPhpCs implements \Kdyby\RabbitMq\IConsumer
 		$repositoryDirName = strtolower($messageJson['repositoryName']);
 		$instanceDirectory = $messageJson['instanceDirectory'];
 
-		$this->logger->addInfo('Bude spuštěna PHP CS pro repozitář "' . $repositoryName . '" a instanci "' . $instanceDirectory . '"');
+		$this->logger->addInfo('Bude spuštěn PHP CS pro repozitář "' . $repositoryName . '" a instanci "' . $instanceDirectory . '"');
 
 		$e = NULL;
 		set_error_handler(function ($errno, $errstr) use (&$e) {
