@@ -20,20 +20,29 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 	 */
 	private $runPhpCsProducer;
 
+	/**
+	 * @var \CI\Orm\Orm
+	 */
+	private $orm;
+
 
 	public function __construct(
 		\Monolog\Logger $logger,
 		\Kdyby\RabbitMq\IProducer $runTestsProducer,
-		\Kdyby\RabbitMq\IProducer $runPhpCsProducer
+		\Kdyby\RabbitMq\IProducer $runPhpCsProducer,
+		\CI\Orm\Orm $orm
 	) {
 		$this->logger = $logger;
 		$this->runTestsProducer = $runTestsProducer;
 		$this->runPhpCsProducer = $runPhpCsProducer;
+		$this->orm = $orm;
 	}
 
 
 	public function process(\PhpAmqpLib\Message\AMQPMessage $message)
 	{
+		$this->orm->clearIdentityMapAndCaches(\CI\Orm\Orm::I_KNOW_WHAT_I_AM_DOING);
+
 		try {
 			$hookJson = \Nette\Utils\Json::decode($message->getBody(), \Nette\Utils\Json::FORCE_ARRAY);
 		} catch (\Nette\Utils\JsonException $e) {

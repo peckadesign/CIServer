@@ -40,6 +40,11 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 	 */
 	private $runPhpCsProducer;
 
+	/**
+	 * @var \CI\Orm\Orm
+	 */
+	private $orm;
+
 
 	public function __construct(
 		\Monolog\Logger $logger,
@@ -48,7 +53,8 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 		\Kdyby\Github\Client $gitHub,
 		\CI\User\UsersRepository $usersRepository,
 		\Kdyby\RabbitMq\IProducer $runTestsProducer,
-		\Kdyby\RabbitMq\IProducer $runPhpCsProducer
+		\Kdyby\RabbitMq\IProducer $runPhpCsProducer,
+		\CI\Orm\Orm $orm
 	) {
 		$this->logger = $logger;
 		$this->createTestServersRepository = $createTestServersRepository;
@@ -57,11 +63,14 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 		$this->usersRepository = $usersRepository;
 		$this->runTestsProducer = $runTestsProducer;
 		$this->runPhpCsProducer = $runPhpCsProducer;
+		$this->orm = $orm;
 	}
 
 
 	public function process(\PhpAmqpLib\Message\AMQPMessage $message)
 	{
+		$this->orm->clearIdentityMapAndCaches(\CI\Orm\Orm::I_KNOW_WHAT_I_AM_DOING);
+
 		$hookId = $message->getBody();
 		$build = $this->createTestServersRepository->getById($hookId);
 

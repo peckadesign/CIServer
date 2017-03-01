@@ -25,22 +25,31 @@ class RunPhpCs implements \Kdyby\RabbitMq\IConsumer
 	 */
 	private $logDirectory;
 
+	/**
+	 * @var \CI\Orm\Orm
+	 */
+	private $orm;
+
 
 	public function __construct(
 		string $logDirectory,
 		\Monolog\Logger $logger,
 		\CI\Builds\PhpCs\StatusPublicator $statusPublicator,
-		\CI\GitHub\RepositoriesRepository $repositoriesRepository
+		\CI\GitHub\RepositoriesRepository $repositoriesRepository,
+		\CI\Orm\Orm $orm
 	) {
 		$this->logger = $logger;
 		$this->statusPublicator = $statusPublicator;
 		$this->repositoriesRepository = $repositoriesRepository;
 		$this->logDirectory = $logDirectory;
+		$this->orm = $orm;
 	}
 
 
 	public function process(\PhpAmqpLib\Message\AMQPMessage $message)
 	{
+		$this->orm->clearIdentityMapAndCaches(\CI\Orm\Orm::I_KNOW_WHAT_I_AM_DOING);
+
 		try {
 			$messageJson = \Nette\Utils\Json::decode($message->getBody(), \Nette\Utils\Json::FORCE_ARRAY);
 			$this->logger->addNotice('Přijatá data jsou: ' . $message->getBody());
