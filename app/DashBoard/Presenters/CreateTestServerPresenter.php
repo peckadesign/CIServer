@@ -25,16 +25,22 @@ class CreateTestServerPresenter extends BasePresenter
 	 */
 	private $rerunCreateTestServer;
 
+	/**
+	 * @var \CI\DashBoard\Controls\CreateTestServerDataGrid\IFactory
+	 */
+	private $createTestServerDataGrid;
+
 
 	public function __construct(
 		\CI\Builds\CreateTestServer\CreateTestServersRepository $createTestServersRepository,
 		\CI\DashBoard\Controls\PublishCreateTestServerStatus\IFactory $publishCreateTestServerStatusFactory,
-		\CI\DashBoard\Controls\RerunCreateTestServer\IFactory $rerunCreateTestServer
+		\CI\DashBoard\Controls\RerunCreateTestServer\IFactory $rerunCreateTestServer,
+		\CI\DashBoard\Controls\CreateTestServerDataGrid\IFactory $createTestServerDataGrid
 	) {
 
 		$this->createTestServersRepository = $createTestServersRepository;
 		$this->publishCreateTestServerStatusFactory = $publishCreateTestServerStatusFactory;
-		$this->rerunCreateTestServer = $rerunCreateTestServer;
+		$this->createTestServerDataGrid = $createTestServerDataGrid;
 	}
 
 
@@ -63,6 +69,12 @@ class CreateTestServerPresenter extends BasePresenter
 	protected function createComponentRerunCreateTestServer() : \CI\DashBoard\Controls\RerunCreateTestServer\Control
 	{
 		return $this->rerunCreateTestServer->create($this->createTestServer);
+	}
+
+
+	protected function createComponentCreateTestServerDataGrid(): \CI\DashBoard\Controls\CreateTestServerDataGrid\Control
+	{
+		return $this->createTestServerDataGrid->create();
 	}
 
 }

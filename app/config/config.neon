@@ -214,6 +214,9 @@ services:
 		implement: CI\DashBoard\Controls\PublishCreateTestServerStatus\IFactory
 
 	-
+		implement: CI\DashBoard\Controls\CreateTestServerDataGrid\IFactory
+
+	-
 		implement: CI\DashBoard\Controls\RerunCreateTestServer\IFactory
 		arguments:
 			createTestServerProducer: @Kdyby\RabbitMq\Connection::getProducer('createTestServer')
