@@ -121,8 +121,8 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 			$this->runProcess($build, 'test -f Makefile && cat Makefile | grep -q "build-staging:" && HOME=/home/' . get_current_user() . ' make build-staging || true');
 
 			$defaultLocalNeonPath = '/var/www/' . strtolower($build->repository->name) . '/local.neon';
+			$testName = 'test' . $build->pullRequestNumber;
 			if (is_readable($defaultLocalNeonPath)) {
-				$testName = 'test' . $build->pullRequestNumber;
 				if ($databaseFiles) {
 					$cmd = sprintf('sed "s/testX/%s/" < %s > /var/www/%s/%s/app/config/local.neon', $testName, $defaultLocalNeonPath, strtolower($build->repository->name), $testName);
 				} else {
@@ -132,6 +132,7 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 			}
 
 			chdir('/var/www/' . strtolower($build->repository->name) . '/' . $testName);
+			$this->logger->addInfo('Aktuální adresář je ' . print_r(getcwd(), TRUE));
 
 			$publishData = \Nette\Utils\Json::encode(['repositoryName' => strtolower($build->repository->name), 'instanceDirectory' => $testName]);
 			if (is_readable('Makefile') && ($content = file_get_contents('Makefile')) && strpos($content, 'run-tests:') !== FALSE) {
