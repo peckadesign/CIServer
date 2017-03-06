@@ -40,6 +40,7 @@ class CreateTestServerPresenter extends BasePresenter
 
 		$this->createTestServersRepository = $createTestServersRepository;
 		$this->publishCreateTestServerStatusFactory = $publishCreateTestServerStatusFactory;
+		$this->rerunCreateTestServer = $rerunCreateTestServer;
 		$this->createTestServerDataGrid = $createTestServerDataGrid;
 	}
 

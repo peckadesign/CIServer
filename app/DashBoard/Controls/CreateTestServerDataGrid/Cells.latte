@@ -3,3 +3,19 @@
 		{$cell->name}
 	</td>
 {/define}
+
+{define col-commit}
+	<td>
+		{$cell|truncate:7,''}
+	</td>
+{/define}
+
+{define col-finish}
+	<td>
+		{$cell|date:'j. n. Y H:i:s'}
+	</td>
+{/define}
+
+{define row-actions	}
+	<a href="{plink :DashBoard:CreateTestServer:default $row->id}" class="btn btn-success">#{$row->id} – detail</a>
+{/define}
