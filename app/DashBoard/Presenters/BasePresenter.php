@@ -81,18 +81,6 @@ abstract class BasePresenter extends Nette\Application\UI\Presenter
 	}
 
 
-	protected function createTemplate()
-	{
-		$template = parent::createTemplate();
-
-		$template->addFilter('dateTime', function (\DateTime $s) {
-			return $s->format('j. n. Y H:i:s');
-		});
-
-		return $template;
-	}
-
-
 	protected function beforeRender()
 	{
 		parent::beforeRender();
