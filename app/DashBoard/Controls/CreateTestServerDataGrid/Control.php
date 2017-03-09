@@ -47,8 +47,6 @@ class Control extends Nette\Application\UI\Control
 		$grid->addColumn('finish', 'Sestaveno')->enableSort();
 		$grid->setDataSourceCallback([$this, 'getDataSource']);
 		$grid->setPagination(10, [$this, 'getDataSourceSum']);
-		$grid->addCellsTemplate(__DIR__ . '/../../../../vendor/nextras/datagrid/bootstrap-style/@bootstrap3.datagrid.latte');
-		$grid->addCellsTemplate(__DIR__ . '/../../../../vendor/nextras/datagrid/bootstrap-style/@bootstrap3.extended-pagination.datagrid.latte');
 		$grid->addCellsTemplate(__DIR__ . '/Cells.latte');
 
 		$grid->setFilterFormFactory( function () {
@@ -57,8 +55,8 @@ class Control extends Nette\Application\UI\Control
 			$repositories = $this->repositoriesRepository->findAll()->orderBy('name')->fetchPairs('id', 'name');
 			$form->addSelect('repository', 'repository', $repositories)->setPrompt(' --- ');
 			$form->addText('branchName')->setAttribute('placeholder', 'přesná shoda');
-			$form->addSubmit('filter', 'Filter data')->getControlPrototype()->class = 'btn btn-primary';
-			$form->addSubmit('cancel', 'Cancel filter')->getControlPrototype()->class = 'btn';
+			$form->addSubmit('filter', 'Použít filtr')->getControlPrototype()->class = 'btn btn-primary';
+			$form->addSubmit('cancel', 'Zrušit filtr')->getControlPrototype()->class = 'btn';
 
 			return $form;
 		} );

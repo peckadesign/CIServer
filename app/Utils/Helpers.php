@@ -7,9 +7,9 @@ use Nette;
 class Helpers extends Nette\Object
 {
 
-	public static function dateTime(\DateTime $s)
+	public static function dateTime($s)
 	{
-		return $s->format('j. n. Y H:i:s');
+		return $s instanceof \DateTime ? $s->format('j. n. Y H:i:s') : $s;
 	}
 
 }
