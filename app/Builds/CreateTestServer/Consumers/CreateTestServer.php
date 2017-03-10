@@ -106,7 +106,7 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 		try {
 			$success = TRUE;
 
-			$this->runProcess($build, 'OLD_DIR=`pwd` && cd .. && rm -rf $OLD_DIR && cp -RpP staging $OLD_DIR');
+			$this->runProcess($build, 'OLD_DIR=`pwd` && cd .. && rm -rf $OLD_DIR && cp -RP --preserve=all staging $OLD_DIR');
 
 			$this->runProcess($build, 'test -d temp/ && git clean -xdf temp/ || true');
 			$this->runProcess($build, 'test -d log/ && git clean -xdf log/ || true');
