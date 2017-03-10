@@ -214,6 +214,9 @@ services:
 		implement: CI\DashBoard\Controls\PublishCreateTestServerStatus\IFactory
 
 	-
+		implement: CI\DashBoard\Controls\CreateTestServerDataGrid\IFactory
+
+	-
 		implement: CI\DashBoard\Controls\RerunCreateTestServer\IFactory
 		arguments:
 			createTestServerProducer: @Kdyby\RabbitMq\Connection::getProducer('createTestServer')
@@ -245,3 +248,10 @@ services:
 		class: CI\DashBoard\Presenters\PhpCsPresenter
 		arguments:
 			outputDirectory: %logDir%/phpcs/outputs
+
+	ciHelpers:
+		class: CI\Utils\Helpers
+
+	nette.latteFactory:
+		setup:
+			- addFilter('dateTime', [@CI\Utils\Helpers, dateTime])

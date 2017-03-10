@@ -26,15 +26,4 @@ class Control extends \Nette\Application\UI\Control
 		$this->template->render();
 	}
 
-
-	protected function createTemplate()
-	{
-		$template = parent::createTemplate();
-
-		$template->addFilter('dateTime', function (\DateTime $s) {
-			return $s->format('j. n. Y H:i:s');
-		});
-
-		return $template;
-	}
 }
