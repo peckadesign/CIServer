@@ -55,6 +55,7 @@ class RunPhpCs implements \Kdyby\RabbitMq\IConsumer
 			$this->logger->addNotice('Přijatá data jsou: ' . $message->getBody());
 		} catch (\Nette\Utils\JsonException $e) {
 			$this->logger->addNotice('Přijatá data nejsou platná: ' . $e->getMessage());
+
 			return self::MSG_REJECT;
 		}
 
@@ -69,18 +70,19 @@ class RunPhpCs implements \Kdyby\RabbitMq\IConsumer
 			throw new \Exception($errstr, $errno);
 		});
 
+		$success = FALSE;
 
 		try {
 			$instancePath = '/var/www/' . $repositoryDirName . '/' . $instanceDirectory;
 
 			if ( ! is_readable($instancePath)) {
-				throw new \Exception('Instance nebyla na serveru nalezena');
+				$this->logger->addNotice('Instance nebyla na serveru nalezena', $messageJson);
 			}
 
 			chdir($instancePath);
 
 			if ( ! is_readable('Makefile') || ! ($content = file_get_contents('Makefile')) || strpos($content, 'cs:') === FALSE) {
-				$this->logger->addNotice('Instance neobsahuje příkaz pro spuštění kontroly conding standardů');
+				$this->logger->addNotice('Instance neobsahuje příkaz pro spuštění kontroly conding standardů', $messageJson);
 
 				return self::MSG_REJECT;
 			}
@@ -114,10 +116,11 @@ class RunPhpCs implements \Kdyby\RabbitMq\IConsumer
 
 			$phpCs = new \CI\PhpCs\PhpCs($output);
 
-			$this->logger->addInfo(sprintf('Výstup pro commit %s je %d chyb a %d varování.', $currentCommit, $phpCs->getErrors(), $phpCs->getWarnings()));
+			$this->logger->addInfo(sprintf('Výstup pro commit %s je %d chyb a %d varování.', $currentCommit, $phpCs->getErrors(), $phpCs->getWarnings()), $messageJson);
 
 			$this->statusPublicator->publish($repository, $currentCommit, $phpCs);
 
+			$success = TRUE;
 		} catch (\Exception $e) {
 			$this->logger->addError($e);
 		} finally {
@@ -130,7 +133,11 @@ class RunPhpCs implements \Kdyby\RabbitMq\IConsumer
 			}
 		}
 
-		return self::MSG_ACK;
+		if ($success) {
+			return self::MSG_ACK;
+		} else {
+			return self::MSG_REJECT_REQUEUE;
+		}
 	}
 
 

@@ -30,24 +30,33 @@ class RunTests implements \Kdyby\RabbitMq\IConsumer
 	 */
 	private $repositoriesRepository;
 
+	/**
+	 * @var \CI\Orm\Orm
+	 */
+	private $orm;
+
 
 	public function __construct(
 		\Monolog\Logger $logger,
 		\Kdyby\Clock\IDateTimeProvider $dateTimeProvider,
 		\CI\Builds\Tests\BuildRequestsRepository $buildRequestsRepository,
 		\CI\Builds\Tests\StatusPublicator $statusPublicator,
-		\CI\GitHub\RepositoriesRepository $repositoriesRepository
+		\CI\GitHub\RepositoriesRepository $repositoriesRepository,
+		\CI\Orm\Orm $orm
 	) {
 		$this->logger = $logger;
 		$this->dateTimeProvider = $dateTimeProvider;
 		$this->buildRequestsRepository = $buildRequestsRepository;
 		$this->statusPublicator = $statusPublicator;
 		$this->repositoriesRepository = $repositoriesRepository;
+		$this->orm = $orm;
 	}
 
 
 	public function process(\PhpAmqpLib\Message\AMQPMessage $message)
 	{
+		$this->orm->clearIdentityMapAndCaches(\CI\Orm\Orm::I_KNOW_WHAT_I_AM_DOING);
+
 		try {
 			$messageJson = \Nette\Utils\Json::decode($message->getBody(), \Nette\Utils\Json::FORCE_ARRAY);
 		} catch (\Nette\Utils\JsonException $e) {
@@ -73,13 +82,15 @@ class RunTests implements \Kdyby\RabbitMq\IConsumer
 			$instancePath = '/var/www/' . $repositoryDirName . '/' . $instanceDirectory;
 
 			if ( ! is_readable($instancePath)) {
-				throw new \Exception('Instance nebyla na serveru nalezena');
+				$this->logger->addNotice('Instance nebyla na serveru nalezena', $messageJson);
+
+				return self::MSG_REJECT;
 			}
 
 			chdir($instancePath);
 
 			if ( ! is_readable('Makefile') || ! ($content = file_get_contents('Makefile')) || strpos($content, 'run-tests:') === FALSE) {
-				$this->logger->addNotice('Instance neobsahuje příkaz pro spuštění testů');
+				$this->logger->addNotice('Instance neobsahuje příkaz pro spuštění testů', $messageJson);
 
 				return self::MSG_REJECT;
 			}
@@ -155,7 +166,7 @@ class RunTests implements \Kdyby\RabbitMq\IConsumer
 		if ($success) {
 			return self::MSG_ACK;
 		} else {
-			return self::MSG_REJECT;
+			return self::MSG_REJECT_REQUEUE;
 		}
 	}
 
