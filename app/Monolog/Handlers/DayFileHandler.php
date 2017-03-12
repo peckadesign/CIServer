@@ -3,7 +3,6 @@
 namespace CI\Monolog\Handlers;
 
 use Kdyby;
-use Monolog;
 use Nette;
 
 
@@ -17,28 +16,28 @@ class DayFileHandler extends Kdyby\Monolog\Handler\FallbackNetteHandler
 {
 
 	/**
-	 * @var \DateTime
-	 */
-	private $dateTime;
-
-	/**
 	 * @var string
 	 */
 	private $logDir;
+
+	/**
+	 * @var Kdyby\Clock\IDateTimeProvider
+	 */
+	private $dateTimeProvider;
 
 
 	public function __construct($appName, $logDir, $expandNewlines = FALSE, Kdyby\Clock\IDateTimeProvider $dateTimeProvider)
 	{
 		parent::__construct($appName, $logDir, $expandNewlines);
 
-		$this->dateTime = $dateTimeProvider->getDateTime();
 		$this->logDir = $logDir;
+		$this->dateTimeProvider = $dateTimeProvider;
 	}
 
 
 	protected function write(array $record)
 	{
-		$record['filename'] = $record['filename'] . '/' . $this->dateTime->format('Y-m') . '/' . $this->dateTime->format('Y-m-d') . '-' . $record['filename'];
+		$record['filename'] = $record['filename'] . '/' . $this->dateTimeProvider->getDateTime()->format('Y-m') . '/' . $this->dateTimeProvider->getDateTime()->format('Y-m-d') . '-' . $record['filename'];
 
 		$logDirectory = dirname($this->logDir . '/' . strtolower($record['filename']));
 		Nette\Utils\FileSystem::createDir($logDirectory);
