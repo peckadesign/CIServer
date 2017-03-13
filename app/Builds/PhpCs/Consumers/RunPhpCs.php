@@ -99,14 +99,17 @@ class RunPhpCs implements \Kdyby\RabbitMq\IConsumer
 				$repository = $this->repositoriesRepository->persistAndFlush($repository);
 			}
 
+			$success = TRUE;
+
 			$this->runProcess('make cs');
-			$output = file_get_contents($instancePath . '/output.cs');
-			if ( ! $output) {
+
+			$outputFilename = $instancePath . '/output.cs';
+			if ( ! is_readable($outputFilename) || ! ($output = file_get_contents($outputFilename))) {
 				throw new \CI\Exception('Nepodařilo se dohledat výstup kontroly coding standardů');
 			}
 
 			\Nette\Utils\FileSystem::copy(
-				$instancePath . '/output.cs',
+				$outputFilename,
 				sprintf(
 					'%s/%s.cs',
 					$this->logDirectory,
@@ -120,7 +123,6 @@ class RunPhpCs implements \Kdyby\RabbitMq\IConsumer
 
 			$this->statusPublicator->publish($repository, $currentCommit, $phpCs);
 
-			$success = TRUE;
 		} catch (\Exception $e) {
 			$this->logger->addError($e);
 		} finally {
