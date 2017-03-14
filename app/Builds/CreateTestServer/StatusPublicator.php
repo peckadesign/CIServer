@@ -17,21 +17,14 @@ class StatusPublicator
 	 */
 	private $linkGenerator;
 
-	/**
-	 * @var \Kdyby\Clock\IDateTimeProvider
-	 */
-	private $dateTimeProvider;
-
 
 	public function __construct(
 		\CI\GitHub\StatusPublicator $statusPublicator,
-		\Nette\Application\LinkGenerator $linkGenerator,
-		\Kdyby\Clock\IDateTimeProvider $dateTimeProvider
+		\Nette\Application\LinkGenerator $linkGenerator
 	) {
 
 		$this->statusPublicator = $statusPublicator;
 		$this->linkGenerator = $linkGenerator;
-		$this->dateTimeProvider = $dateTimeProvider;
 	}
 
 
@@ -39,14 +32,14 @@ class StatusPublicator
 	{
 		if ($createTestServer->finish) {
 			if ($createTestServer->success) {
-				$description = 'Byl vytvořen ' . \CI\Utils\Helpers::dateTime($this->dateTimeProvider->getDateTime());
+				$description = 'Byl vytvořen ' . \CI\Utils\Helpers::dateTime($createTestServer->finish);
 				$status = \CI\GitHub\StatusPublicator::STATUS_SUCCESS;
 			} else {
-				$description = 'Byl vytvořen ' . \CI\Utils\Helpers::dateTime($this->dateTimeProvider->getDateTime());
+				$description = 'Byl vytvořen ' . \CI\Utils\Helpers::dateTime($createTestServer->finish);
 				$status = \CI\GitHub\StatusPublicator::STATUS_SUCCESS;
 			}
 		} elseif ($createTestServer->start) {
-			$description = 'Probíhá příprava od ' . \CI\Utils\Helpers::dateTime($this->dateTimeProvider->getDateTime());
+			$description = 'Probíhá příprava od ' . \CI\Utils\Helpers::dateTime($createTestServer->start);
 			$status = \CI\GitHub\StatusPublicator::STATUS_PENDING;
 		} else {
 			$description = 'Je v plánu';
