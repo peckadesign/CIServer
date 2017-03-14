@@ -10,13 +10,10 @@ use Nette;
 class StatusPublicator implements IStatusPublicator
 {
 
-	const DATE_TIME_FORMAT = 'j. n. Y H:i:s';
-
 	/**
 	 * @var Nette\Application\LinkGenerator
 	 */
 	private $linkGenerator;
-
 
 	/**
 	 * @var CI\GitHub\StatusPublicator
@@ -42,12 +39,12 @@ class StatusPublicator implements IStatusPublicator
 
 		if ( ! $buildRequest->start) {
 			$state = 'pending';
-			$message = 'Čeká se na spuštění testů.';
+			$message = 'Čeká se na spuštění';
 		} elseif ( ! $buildRequest->finish) {
 			$state = 'pending';
 			$message = sprintf(
-				'Čeká se na dokončení spuštěných testů, běží od %s.',
-				$buildRequest->start->format(self::DATE_TIME_FORMAT)
+				'Testy běží od %s',
+				CI\Utils\Helpers::dateTime($buildRequest->start)
 			);
 		} elseif ($buildRequest->failed) {
 			$state = 'failure';
@@ -66,9 +63,9 @@ class StatusPublicator implements IStatusPublicator
 			$message = sprintf(
 				'%s. %s %u, %s %u.',
 				$message,
-				'Prošlo',
+				CI\Utils\Helpers::plural((int) $buildRequest->succeeded, 'Prošlo', 'Prošel', 'Prošly'),
 				$buildRequest->succeeded,
-				'selhalo',
+				CI\Utils\Helpers::plural((int) $buildRequest->failed, 'selhalo', 'selhal', 'selhaly'),
 				$buildRequest->failed
 			);
 		}
@@ -78,7 +75,7 @@ class StatusPublicator implements IStatusPublicator
 			$buildRequest->commit,
 			$state,
 			$message,
-			'Automatické testy',
+			'Testy',
 			$this->linkGenerator->link('DashBoard:BuildRequest:', [$buildRequest->id])
 		);
 	}

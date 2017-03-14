@@ -5,8 +5,6 @@ namespace CI\GitHub;
 class StatusPublicator
 {
 
-	const DATE_TIME_FORMAT = 'j. n. Y H:i:s';
-
 	const STATUS_PENDING = 'pending';
 	const STATUS_SUCCESS = 'success';
 	const STATUS_FAILURE = 'failure';

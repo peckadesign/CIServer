@@ -10,8 +10,6 @@ use Nette;
 class StatusPublicator
 {
 
-	const DATE_TIME_FORMAT = 'j. n. Y H:i:s';
-
 	/**
 	 * @var Nette\Application\LinkGenerator
 	 */
@@ -42,7 +40,8 @@ class StatusPublicator
 			$state = 'success';
 		} else {
 			$message = sprintf(
-				'Nalezeno %d chyb a %d varování.',
+				'Nalezeno: %d %s a %d varování.',
+				CI\Utils\Helpers::plural($phpCs->getErrors(), 'chyb', 'chyba', 'chyby'),
 				$phpCs->getErrors(),
 				$phpCs->getWarnings()
 			);
