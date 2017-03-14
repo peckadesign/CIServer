@@ -41,8 +41,8 @@ class StatusPublicator
 		} else {
 			$message = sprintf(
 				'Nalezeno: %d %s a %d varování.',
-				CI\Utils\Helpers::plural($phpCs->getErrors(), 'chyb', 'chyba', 'chyby'),
 				$phpCs->getErrors(),
+				CI\Utils\Helpers::plural($phpCs->getErrors(), 'chyb', 'chyba', 'chyby'),
 				$phpCs->getWarnings()
 			);
 
