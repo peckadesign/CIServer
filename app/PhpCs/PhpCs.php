@@ -10,8 +10,14 @@ class PhpCs
 	 */
 	private $input;
 
+	/**
+	 * @var int
+	 */
 	private $warnings;
 
+	/**
+	 * @var int
+	 */
 	private $errors;
 
 
@@ -21,23 +27,23 @@ class PhpCs
 	}
 
 
-	public function getWarnings()
+	public function getWarnings(): int
 	{
 		if ($this->warnings === NULL) {
 			$this->parse();
 		}
 
-		return $this->warnings;
+		return (int) $this->warnings;
 	}
 
 
-	public function getErrors()
+	public function getErrors(): int
 	{
 		if ($this->errors === NULL) {
 			$this->parse();
 		}
 
-		return $this->errors;
+		return (int) $this->errors;
 	}
 
 
@@ -53,8 +59,8 @@ class PhpCs
 
 			preg_match('/^FOUND (?<errors>[0-9]+) ERRORS?( AND (?<warnings>[0-9]+) WARNINGS?)?/', $line, $matches);
 
-			isset($matches['errors']) && $this->errors += $matches['errors'];
-			isset($matches['warnings']) && $this->warnings += $matches['warnings'];
+			isset($matches['errors']) && $this->errors += (int) $matches['errors'];
+			isset($matches['warnings']) && $this->warnings += (int) $matches['warnings'];
 		}
 	}
 }

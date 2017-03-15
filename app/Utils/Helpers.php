@@ -18,7 +18,7 @@ class Helpers extends Nette\Object
 	{
 		if ($count === 1) {
 			return $one;
-		} elseif ($count === 2) {
+		} elseif ($count >= 2 && $count <= 4) {
 			return $two;
 		} else {
 			return $zero;
