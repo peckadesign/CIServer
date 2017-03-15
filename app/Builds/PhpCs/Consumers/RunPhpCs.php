@@ -101,7 +101,7 @@ class RunPhpCs implements \Kdyby\RabbitMq\IConsumer
 
 			$success = TRUE;
 
-			$this->runProcess('make cs');
+			$this->runProcess('HOME=/home/' . get_current_user() . ' make cs');
 
 			$outputFilename = $instancePath . '/output.cs';
 			if ( ! is_readable($outputFilename) || ! ($output = file_get_contents($outputFilename))) {
