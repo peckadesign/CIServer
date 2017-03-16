@@ -114,7 +114,7 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 
 					$this->runProcess('git reset origin/' . $currentBranch . ' --hard');
 
-					$this->runProcess('git clean -fx .');
+					$this->runProcess('git clean -fx composer.lock');
 
 					if (is_readable('Makefile') && ($content = file_get_contents('Makefile')) && strpos($content, 'clean-cache:') !== FALSE && strpos($content, 'build-staging:') !== FALSE) {
 						$this->runProcess('make clean-cache');

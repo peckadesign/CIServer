@@ -111,7 +111,7 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 			$this->runProcess($build, 'test -d temp/ && git clean -xdf temp/ || true');
 			$this->runProcess($build, 'test -d log/ && git clean -xdf log/ || true');
 			$this->runProcess($build, 'git reset origin/master --hard');
-			$this->runProcess($build, 'git clean -fx .');
+			$this->runProcess($build, 'git clean -fx composer.lock');
 
 			$this->runProcess($build, 'git fetch --prune');
 			$this->runProcess($build, 'git checkout ' . $build->branchName);
