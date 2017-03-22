@@ -104,7 +104,7 @@ class RunPhpCs implements \Kdyby\RabbitMq\IConsumer
 			$this->runProcess('HOME=/home/' . get_current_user() . ' make cs');
 
 			$outputFilename = $instancePath . '/output.cs';
-			if ( ! is_readable($outputFilename) || ($output = file_get_contents($outputFilename) === FALSE)) {
+			if ( ! is_readable($outputFilename) || ($output = file_get_contents($outputFilename)) === FALSE) {
 				throw new \CI\Exception('Nepodařilo se dohledat výstup kontroly coding standardů');
 			}
 
