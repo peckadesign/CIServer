@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types = 1);
 
 namespace CI\Builds\Tests;
 
@@ -20,7 +20,7 @@ class WorkspaceLocator implements IWorkspaceLocator
 	}
 
 
-	public function getPath(BuildRequest $buildRequest)
+	public function getPath(BuildRequest $buildRequest): string
 	{
 		return $this->appDir . '/../repositories/' . $buildRequest->repository->name;
 	}

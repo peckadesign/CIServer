@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types = 1);
 
 namespace CI\GitHub;
 
@@ -66,6 +66,8 @@ class StatusPublicator
 		$this->logger->addInfo(
 			sprintf('Pro commit %s je nastavován status "%s" a odkaz "%s"', $commit, $body['description'], $link)
 		);
+
+		return;
 
 		$this->gitHubClient->setAccessToken($systemUser->gitHubToken);
 

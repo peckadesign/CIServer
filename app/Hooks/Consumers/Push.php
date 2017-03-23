@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types = 1);
 
 namespace CI\Hooks\Consumers;
 
@@ -11,31 +11,42 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 	private $logger;
 
 	/**
-	 * @var \Kdyby\RabbitMq\IProducer
-	 */
-	private $runTestsProducer;
-
-	/**
-	 * @var \Kdyby\RabbitMq\IProducer
-	 */
-	private $runPhpCsProducer;
-
-	/**
 	 * @var \CI\Orm\Orm
 	 */
 	private $orm;
 
+	/**
+	 * @var array|\CI\Builds\IOnBuildReady
+	 */
+	private $onBuildReady;
+
+	/**
+	 * @var \CI\Builds\CreateTestServer\CreateTestServersRepository
+	 */
+	private $createTestServersRepository;
+
+	/**
+	 * @var \CI\GitHub\RepositoriesRepository
+	 */
+	private $repositoriesRepository;
+
 
 	public function __construct(
 		\Monolog\Logger $logger,
-		\Kdyby\RabbitMq\IProducer $runTestsProducer,
-		\Kdyby\RabbitMq\IProducer $runPhpCsProducer,
-		\CI\Orm\Orm $orm
+		\CI\Orm\Orm $orm,
+		\CI\Builds\CreateTestServer\CreateTestServersRepository $createTestServersRepository,
+		\CI\GitHub\RepositoriesRepository $repositoriesRepository
 	) {
 		$this->logger = $logger;
-		$this->runTestsProducer = $runTestsProducer;
-		$this->runPhpCsProducer = $runPhpCsProducer;
 		$this->orm = $orm;
+		$this->createTestServersRepository = $createTestServersRepository;
+		$this->repositoriesRepository = $repositoriesRepository;
+	}
+
+
+	public function addOnBuildReady(\CI\Builds\IOnBuildReady $onBuildReady)
+	{
+		$this->onBuildReady[] = $onBuildReady;
 	}
 
 
@@ -51,6 +62,17 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 
 		$repositoryName = strtolower($hookJson['repositoryName']);
 		$branchName = $hookJson['branchName'];
+
+		$conditions = [
+			'name' => $repositoryName,
+		];
+		$repository = $this->repositoriesRepository->getBy($conditions);
+
+		$conditions = [
+			'repository' => $repository,
+			'branchName' => $branchName,
+		];
+		$build = $this->createTestServersRepository->getBy($conditions);
 
 		$this->logger->addInfo('Aktualizovaná větev je "' . $branchName . '"');
 
@@ -114,42 +136,32 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 
 					$this->runProcess('git reset origin/' . $currentBranch . ' --hard');
 
-					$this->runProcess('git clean -fx composer.lock');
+					$currentCommit = $this->runProcess('git rev-parse HEAD');
+
+					$this->runProcess('git clean -fx composer.lock', $currentCommit);
 
 					if (is_readable('Makefile') && ($content = file_get_contents('Makefile')) && strpos($content, 'clean-cache:') !== FALSE && strpos($content, 'build-staging:') !== FALSE) {
-						$this->runProcess('make clean-cache');
-						$this->runProcess('HOME=/home/' . get_current_user() . ' make build-staging');
+						$this->runProcess('make clean-cache', $currentCommit);
+						$this->runProcess('HOME=/home/' . get_current_user() . ' make build-staging', $currentCommit);
 					} else {
 						if (is_readable('temp/cache')) {
-							$this->runProcess('git clean -dfX temp/cache');
+							$this->runProcess('git clean -dfX temp/cache', $currentCommit);
 						} elseif (is_readable('temp')) {
-							$this->runProcess('git clean -dfX temp');
+							$this->runProcess('git clean -dfX temp', $currentCommit);
 						}
 					}
 
-					if (is_readable('Makefile') && ($content = file_get_contents('Makefile')) && strpos($content, 'run-tests:') !== FALSE) {
-						$publishData = \Nette\Utils\Json::encode(['repositoryName' => $repositoryName, 'instanceDirectory' => $instanceDirectory]);
-						$this->logger->addInfo('Instance obsahuje testy, budou spuštěny: ' . $publishData);
-						$this->runTestsProducer->publish($publishData);
-					} else {
-						$this->logger->addInfo('Instance neobsahuje cíl pro spuštění testů');
+					/** @var \CI\Builds\IOnBuildReady $onBuildReady */
+					foreach ($this->onBuildReady as $onBuildReady) {
+						$onBuildReady->buildReady($this->logger, $build, $currentCommit);
 					}
 
-					if (is_readable('Makefile') && ($content = file_get_contents('Makefile')) && strpos($content, 'cs:') !== FALSE) {
-						$publishData = \Nette\Utils\Json::encode(['repositoryName' => $repositoryName, 'instanceDirectory' => $instanceDirectory]);
-						$this->logger->addInfo('Instance obsahuje coding standard, bude spuštěn: ' . $publishData);
-						$this->runPhpCsProducer->publish($publishData);
-					} else {
-						$this->logger->addInfo('Instance neobsahuje cíl pro spuštění cs');
-					}
-
-					$this->logger->addInfo('Aktualizace instance ' . $instanceDirectory . ' dokončena');
-
-				} catch(\CI\Hooks\SkipException $e) {
+					$this->logger->addInfo('Aktualizace instance ' . $instanceDirectory . ' dokončena', ['commit' => $currentCommit]);
+				} catch (\CI\Hooks\SkipException $e) {
 					$this->logger->addInfo($e->getMessage());
 					continue;
 				} catch (\Exception $e) {
-					$this->logger->addError($e->getMessage());
+					$this->logger->addError($e->getMessage(), isset($currentCommit) ? ['commit' => $currentCommit] : []);
 					continue;
 				} finally {
 					chdir('..');
@@ -157,6 +169,7 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 			}
 		} catch (\Exception $e) {
 			$this->logger->addError($e->getMessage());
+
 			return self::MSG_REJECT;
 		}
 
@@ -164,22 +177,23 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 	}
 
 
-	private function runProcess(string $cmd) : string
+	private function runProcess(string $cmd, string $commit = NULL): string
 	{
-		$this->logger->addInfo($cmd);
+		$this->logger->addInfo($cmd, $commit ? ['commit' => $commit] : []);
 		$process = new \Symfony\Component\Process\Process($cmd, NULL, NULL, NULL, NULL);
 		try {
-			$cb = function (string $type, string $buffer) {
+			$cb = function (string $type, string $buffer) use ($commit) {
 				if ($type === \Symfony\Component\Process\Process::ERR) {
-					$this->logger->addError($buffer);
+					$this->logger->addError($buffer, $commit ? ['commit' => $commit] : []);
 				} else {
-					$this->logger->addInfo($buffer);
+					$this->logger->addInfo($buffer, $commit ? ['commit' => $commit] : []);
 				}
 			};
 			$process->mustRun($cb);
+
 			return trim($process->getOutput());
 		} catch (\Symfony\Component\Process\Exception\RuntimeException $e) {
-			$this->logger->addError($e->getMessage());
+			$this->logger->addError($e->getMessage(), $commit ? ['commit' => $commit] : []);
 
 			throw $e;
 		}

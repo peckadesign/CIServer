@@ -40,6 +40,7 @@ monolog:
 	name: "pecka-ci-server"
 	handlers:
 		- CI\Monolog\Handlers\DayFileHandler("pecka-ci-server", %logDir%)
+		- CI\Monolog\Handlers\CommitHandler("pecka-ci-server", %logDir%)
 
 
 parameters:
@@ -161,21 +162,24 @@ services:
 		class: CI\Hooks\Consumers\Push
 		arguments:
 			logger: @Kdyby\Monolog\Logger::channel('push')
-			runTestsProducer: @Kdyby\RabbitMq\Connection::getProducer('runTests')
-			runPhpCsProducer: @Kdyby\RabbitMq\Connection::getProducer('runPhpCs')
-
-	-
-		class: CI\Builds\Tests\Commands\BuildCommand
-		tags:
-			- kdyby.console.command
-
-	-
-		class: CI\Builds\Tests\Builder
 
 	-
 		class: CI\Builds\Tests\WorkspaceLocator
 		arguments:
 			- %appDir%
+
+	-
+		class: CI\Builds\PhpCs\PublishPhpCs
+		arguments:
+			producer: @Kdyby\RabbitMq\Connection::getProducer('runPhpCs')
+
+	-
+		class: CI\Builds\Tests\PublishTests
+		arguments:
+			producer: @Kdyby\RabbitMq\Connection::getProducer('runTests')
+
+	-
+		class: CI\Builds\CreateTestServer\BuildLocator
 
 	-
 		implement: CI\DashBoard\Controls\RecentBuildRequests\IFactory
@@ -204,8 +208,9 @@ services:
 		class: CI\Builds\CreateTestServer\Consumers\CreateTestServer
 		arguments:
 			logger: @Kdyby\Monolog\Logger::channel('createTest')
-			runTestsProducer: @Kdyby\RabbitMq\Connection::getProducer('runTests')
-			runPhpCsProducer: @Kdyby\RabbitMq\Connection::getProducer('runPhpCs')
+		setup:
+			- addOnBuildReady(@CI\Builds\PhpCs\PublishPhpCs)
+			- addOnBuildReady(@CI\Builds\Tests\PublishTests)
 
 	-
 		implement: CI\DashBoard\Controls\RecentCreateTestServer\IFactory
@@ -255,3 +260,8 @@ services:
 	nette.latteFactory:
 		setup:
 			- addFilter('dateTime', [@CI\Utils\Helpers, dateTime])
+
+	-
+		class: CI\Monolog\Handlers\CommitLogLocator
+		arguments:
+			logDir: %logDir%
