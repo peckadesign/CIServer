@@ -78,17 +78,24 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 		];
 		$build = $this->createTestServersRepository->getBy($conditions);
 
+		if ( ! $build) {
+			if ($branchName !== 'master') {
+				$this->logger->addInfo('Ještě se nezaložil testovací server, počká se na něj');
+				sleep(1);
+
+				return self::MSG_REJECT_REQUEUE;
+			} else {
+				$build = new \CI\Builds\CreateTestServer\CreateTestServer();
+				$build->branchName = $branchName;
+				$build->repository = $repository;
+				$build = $this->createTestServersRepository->persistAndFlush($build);
+			}
+		}
+
 		if ($build->closed) {
 			$this->logger->addInfo('PR aktualizované větve je už zavřený, nebude se aktualizovat');
 
 			return self::MSG_REJECT;
-		}
-
-		if ( ! $build) {
-			$build = new \CI\Builds\CreateTestServer\CreateTestServer();
-			$build->branchName = $branchName;
-			$build->repository = $repository;
-			$build = $this->createTestServersRepository->persistAndFlush($build);
 		}
 
 		$this->logger->addInfo('Aktualizovaná větev je "' . $branchName . '"');
