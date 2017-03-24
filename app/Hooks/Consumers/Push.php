@@ -132,7 +132,7 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 						throw new \Exception('Nepodařilo na získat název aktuální větve', $e->getCode(), $e);
 					}
 
-					if ($branchName !== 'refs/heads/' . $currentBranch) {
+					if ($branchName !== $currentBranch) {
 						throw new \CI\Hooks\SkipException('Do změn nepřišla aktuální větev');
 					}
 
