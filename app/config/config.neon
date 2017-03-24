@@ -140,9 +140,6 @@ services:
 		class: CI\Hooks\PushProcessor
 		arguments:
 			- @Kdyby\RabbitMq\Connection::getProducer('push')
-		setup:
-			- addOnBuildReady(@CI\Builds\PhpCs\PublishPhpCs)
-			- addOnBuildReady(@CI\Builds\Tests\PublishTests)
 
 	-
 		class: CI\Hooks\Consumers\OpenedPullRequest
@@ -164,6 +161,9 @@ services:
 		class: CI\Hooks\Consumers\Push
 		arguments:
 			logger: @Kdyby\Monolog\Logger::channel('push')
+		setup:
+			- addOnBuildReady(@CI\Builds\PhpCs\PublishPhpCs)
+			- addOnBuildReady(@CI\Builds\Tests\PublishTests)
 
 	-
 		class: CI\Builds\Tests\WorkspaceLocator
