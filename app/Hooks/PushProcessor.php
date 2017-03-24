@@ -1,4 +1,4 @@
-<?php declare(strict_types = 1);
+<?php declare(strict_types=1);
 
 namespace CI\Hooks;
 
@@ -18,8 +18,7 @@ class PushProcessor
 
 	public function __construct(
 		\Kdyby\RabbitMq\IProducer $pushProducer
-	)
-	{
+	) {
 		$this->pushProducer = $pushProducer;
 	}
 
@@ -28,8 +27,9 @@ class PushProcessor
 	{
 		$repositoryName = $hookJson['repository']['name'];
 		$branchName = $hookJson['ref'];
-
-		$this->pushProducer->publish(\Nette\Utils\Json::encode(['repositoryName' => $repositoryName, 'branchName' => $branchName]));
+		if ($branchName === 'refs/heads/master') {
+			$this->pushProducer->publish(\Nette\Utils\Json::encode(['repositoryName' => $repositoryName, 'branchName' => $branchName]));
+		}
 
 		return TRUE;
 	}

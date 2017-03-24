@@ -135,6 +135,7 @@ services:
 			- @Kdyby\RabbitMq\Connection::getProducer('openedPullRequest')
 			- @Kdyby\RabbitMq\Connection::getProducer('synchronizedPullRequest')
 			- @Kdyby\RabbitMq\Connection::getProducer('closedPullRequest')
+			- @Kdyby\RabbitMq\Connection::getProducer('push')
 
 	-
 		class: CI\Hooks\PushProcessor
