@@ -1,4 +1,4 @@
-<?php declare(strict_types = 1);
+<?php declare(strict_types=1);
 
 namespace CI\Hooks\Consumers;
 
@@ -63,6 +63,9 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 
 		$repositoryName = strtolower($hookJson['repositoryName']);
 		$branchName = $hookJson['branchName'];
+		if (($slashPosition = strrpos($branchName, '/')) !== FALSE) {
+			$branchName = substr($branchName, $slashPosition + 1);
+		}
 
 		$conditions = [
 			'name' => $repositoryName,
