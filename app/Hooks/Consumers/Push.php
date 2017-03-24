@@ -55,6 +55,7 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 		$this->orm->clearIdentityMapAndCaches(\CI\Orm\Orm::I_KNOW_WHAT_I_AM_DOING);
 
 		try {
+			$this->logger->addDebug('Přijatá data jsou: ' . $message->getBody());
 			$hookJson = \Nette\Utils\Json::decode($message->getBody(), \Nette\Utils\Json::FORCE_ARRAY);
 		} catch (\Nette\Utils\JsonException $e) {
 			return self::MSG_REJECT;
