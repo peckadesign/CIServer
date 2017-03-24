@@ -84,9 +84,9 @@ class RunTests implements \Kdyby\RabbitMq\IConsumer
 
 		$this->logger->addInfo(
 			sprintf(
-				'Spouští se testy pro repozitář "%s" a PR "#%s"',
+				'Spouští se testy pro repozitář "%s" a větev "%s"',
 				$build->repository->name,
-				$build->pullRequestNumber
+				$build->branchName
 			),
 			[
 				'commit' => $builtCommit->getCommit(),
@@ -102,6 +102,7 @@ class RunTests implements \Kdyby\RabbitMq\IConsumer
 		$buildRequest = NULL;
 
 		$instancePath = $this->buildLocator->getPath($build->repository->name, $build->pullRequestNumber);
+		$this->logger->addInfo('Cesta instance je ' . $instancePath, ['commit' => $builtCommit->getCommit()]);
 		try {
 
 			if ( ! is_readable($instancePath)) {

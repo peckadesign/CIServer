@@ -1,4 +1,4 @@
-<?php declare(strict_types = 1);
+<?php declare(strict_types=1);
 
 namespace CI\Builds\PhpCs\Consumers;
 
@@ -68,7 +68,16 @@ class RunPhpCs implements \Kdyby\RabbitMq\IConsumer
 
 		$build = $this->createTestServersRepository->getById($builtCommit->getBuildId());
 
-		$this->logger->addInfo('Spouští se PHP CS pro repozitář "' . $build->repository->name . '" a PR "#' . $build->pullRequestNumber . '"', ['commit' => $builtCommit->getCommit()]);
+		$this->logger->addInfo(
+			sprintf(
+				'Spouští se PHP CS pro repozitář "%s" a větev "%s"',
+				$build->repository->name,
+				$build->branchName
+			),
+			[
+				'commit' => $builtCommit->getCommit(),
+			]
+		);
 
 		$e = NULL;
 		set_error_handler(function ($errno, $errstr) use (&$e) {
@@ -78,6 +87,7 @@ class RunPhpCs implements \Kdyby\RabbitMq\IConsumer
 		$success = FALSE;
 
 		$instancePath = $this->buildLocator->getPath($build->repository->name, $build->pullRequestNumber);
+		$this->logger->addInfo('Cesta instance je ' . $instancePath, ['commit' => $builtCommit->getCommit()]);
 		try {
 			if ( ! is_readable($instancePath)) {
 				$this->logger->addNotice('Instance nebyla na serveru nalezena', ['commit' => $builtCommit->getCommit()]);
