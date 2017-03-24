@@ -67,8 +67,6 @@ class StatusPublicator
 			sprintf('Pro commit %s je nastavován status "%s" a odkaz "%s"', $commit, $body['description'], $link)
 		);
 
-		return;
-
 		$this->gitHubClient->setAccessToken($systemUser->gitHubToken);
 
 		try {
