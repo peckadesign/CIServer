@@ -78,6 +78,12 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 		];
 		$build = $this->createTestServersRepository->getBy($conditions);
 
+		if ($build->closed) {
+			$this->logger->addInfo('PR aktualizované větve je už zavřený, nebude se aktualizovat');
+
+			return self::MSG_REJECT;
+		}
+
 		if ( ! $build) {
 			$build = new \CI\Builds\CreateTestServer\CreateTestServer();
 			$build->branchName = $branchName;

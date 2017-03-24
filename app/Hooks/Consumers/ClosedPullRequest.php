@@ -1,4 +1,4 @@
-<?php declare(strict_types = 1);
+<?php declare(strict_types=1);
 
 namespace CI\Hooks\Consumers;
 
@@ -20,6 +20,11 @@ class ClosedPullRequest implements \Kdyby\RabbitMq\IConsumer
 	 */
 	private $binDir;
 
+	/**
+	 * @var \CI\Builds\CreateTestServer\CreateTestServersRepository
+	 */
+	private $createTestServersRepository;
+
 
 	public function __construct(
 		string $binDir,
@@ -30,12 +35,14 @@ class ClosedPullRequest implements \Kdyby\RabbitMq\IConsumer
 		$this->binDir = $binDir;
 		$this->logger = $logger;
 		$this->pullRequestsRepository = $pullRequestsRepository;
+		$this->createTestServersRepository = $createTestServersRepository;
 	}
 
 
 	public function process(\PhpAmqpLib\Message\AMQPMessage $message)
 	{
 		$hookId = $message->getBody();
+		/** @var \CI\Hooks\PullRequest $hook */
 		$hook = $this->pullRequestsRepository->getById($hookId);
 
 		if ( ! $hook) {
@@ -64,6 +71,17 @@ class ClosedPullRequest implements \Kdyby\RabbitMq\IConsumer
 
 			$cmd = sprintf('mysql --defaults-extra-file=/var/www/%s/mysql.cnf -e "DROP DATABASE IF EXISTS %s;"', strtolower($hook->repository->name), $dbName);
 			$this->runProcess($cmd);
+		}
+
+		$conditions = [
+			'repository' => $hook->repository,
+			'pullRequestNumber' => $hook->pullRequestNumber,
+		];
+		/** @var \CI\Builds\CreateTestServer\CreateTestServer $build */
+		$build = $this->createTestServersRepository->getBy($conditions);
+		if ($build) {
+			$build->closed = TRUE;
+			$this->createTestServersRepository->persistAndFlush($build);
 		}
 
 		return self::MSG_ACK;
