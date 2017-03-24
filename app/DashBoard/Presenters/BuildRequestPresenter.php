@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types = 1);
 
 namespace CI\DashBoard\Presenters;
 
@@ -23,13 +23,20 @@ class BuildRequestPresenter extends BasePresenter
 	 */
 	private $publishBuildRequestStatusFactory;
 
+	/**
+	 * @var CI\Monolog\Handlers\CommitLogLocator
+	 */
+	private $commitLogLocator;
+
 
 	public function __construct(
 		CI\Builds\Tests\BuildRequestsRepository $buildRequests,
-		CI\DashBoard\Controls\PublishBuildRequestStatus\IFactory $publishBuildRequestStatusFactory
+		CI\DashBoard\Controls\PublishBuildRequestStatus\IFactory $publishBuildRequestStatusFactory,
+		CI\Monolog\Handlers\CommitLogLocator $commitLogLocator
 	) {
 		$this->buildRequests = $buildRequests;
 		$this->publishBuildRequestStatusFactory = $publishBuildRequestStatusFactory;
+		$this->commitLogLocator = $commitLogLocator;
 	}
 
 
@@ -46,6 +53,7 @@ class BuildRequestPresenter extends BasePresenter
 	public function renderDefault(int $id)
 	{
 		$this->template->buildRequest = $this->buildRequest;
+		$this->template->output = file_get_contents($this->commitLogLocator->getFilePath('runTests', '8d0d4fdc0975d962256f0de2603621ec148f82db'));
 	}
 
 

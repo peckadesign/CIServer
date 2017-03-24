@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types = 1);
 
 namespace CI\Builds\PhpCs\Consumers;
 
@@ -16,11 +16,6 @@ class RunPhpCs implements \Kdyby\RabbitMq\IConsumer
 	private $statusPublicator;
 
 	/**
-	 * @var \CI\GitHub\RepositoriesRepository
-	 */
-	private $repositoriesRepository;
-
-	/**
 	 * @var string
 	 */
 	private $logDirectory;
@@ -30,19 +25,31 @@ class RunPhpCs implements \Kdyby\RabbitMq\IConsumer
 	 */
 	private $orm;
 
+	/**
+	 * @var \CI\Builds\CreateTestServer\CreateTestServersRepository
+	 */
+	private $createTestServersRepository;
+
+	/**
+	 * @var \CI\Builds\CreateTestServer\BuildLocator
+	 */
+	private $buildLocator;
+
 
 	public function __construct(
 		string $logDirectory,
 		\Monolog\Logger $logger,
 		\CI\Builds\PhpCs\StatusPublicator $statusPublicator,
-		\CI\GitHub\RepositoriesRepository $repositoriesRepository,
-		\CI\Orm\Orm $orm
+		\CI\Builds\CreateTestServer\CreateTestServersRepository $createTestServersRepository,
+		\CI\Orm\Orm $orm,
+		\CI\Builds\CreateTestServer\BuildLocator $buildLocator
 	) {
 		$this->logger = $logger;
 		$this->statusPublicator = $statusPublicator;
-		$this->repositoriesRepository = $repositoriesRepository;
 		$this->logDirectory = $logDirectory;
 		$this->orm = $orm;
+		$this->createTestServersRepository = $createTestServersRepository;
+		$this->buildLocator = $buildLocator;
 	}
 
 
@@ -51,19 +58,17 @@ class RunPhpCs implements \Kdyby\RabbitMq\IConsumer
 		$this->orm->clearIdentityMapAndCaches(\CI\Orm\Orm::I_KNOW_WHAT_I_AM_DOING);
 
 		try {
-			$messageJson = \Nette\Utils\Json::decode($message->getBody(), \Nette\Utils\Json::FORCE_ARRAY);
-			$this->logger->addNotice('Přijatá data jsou: ' . $message->getBody());
+			$this->logger->addDebug('Přijatá data jsou: ' . $message->getBody());
+			$builtCommit = \CI\Builds\BuiltCommit::fromJson($message->getBody());
 		} catch (\Nette\Utils\JsonException $e) {
 			$this->logger->addNotice('Přijatá data nejsou platná: ' . $e->getMessage());
 
 			return self::MSG_REJECT;
 		}
 
-		$repositoryName = $messageJson['repositoryName'];
-		$repositoryDirName = strtolower($messageJson['repositoryName']);
-		$instanceDirectory = $messageJson['instanceDirectory'];
+		$build = $this->createTestServersRepository->getById($builtCommit->getBuildId());
 
-		$this->logger->addInfo('Bude spuštěn PHP CS pro repozitář "' . $repositoryName . '" a instanci "' . $instanceDirectory . '"');
+		$this->logger->addInfo('Spouští se PHP CS pro repozitář "' . $build->repository->name . '" a PR "#' . $build->pullRequestNumber . '"', ['commit' => $builtCommit->getCommit()]);
 
 		$e = NULL;
 		set_error_handler(function ($errno, $errstr) use (&$e) {
@@ -72,36 +77,21 @@ class RunPhpCs implements \Kdyby\RabbitMq\IConsumer
 
 		$success = FALSE;
 
+		$instancePath = $this->buildLocator->getPath($build->repository->name, $build->pullRequestNumber);
 		try {
-			$instancePath = '/var/www/' . $repositoryDirName . '/' . $instanceDirectory;
-
 			if ( ! is_readable($instancePath)) {
-				$this->logger->addNotice('Instance nebyla na serveru nalezena', $messageJson);
-			}
-
-			chdir($instancePath);
-
-			if ( ! is_readable('Makefile') || ! ($content = file_get_contents('Makefile')) || strpos($content, 'cs:') === FALSE) {
-				$this->logger->addNotice('Instance neobsahuje příkaz pro spuštění kontroly conding standardů', $messageJson);
+				$this->logger->addNotice('Instance nebyla na serveru nalezena', ['commit' => $builtCommit->getCommit()]);
 
 				return self::MSG_REJECT;
 			}
 
-			$currentCommit = $this->runProcess('git rev-parse HEAD');
+			chdir($instancePath);
 
-			$conditions = [
-				'name' => $repositoryName,
-			];
-			$repository = $this->repositoriesRepository->getBy($conditions);
-			if ( ! $repository) {
-				$repository = new \CI\GitHub\Repository();
-				$repository->name = $repositoryName;
-				$repository = $this->repositoriesRepository->persistAndFlush($repository);
-			}
+			$currentCommit = $this->runProcess('git rev-parse HEAD');
 
 			$success = TRUE;
 
-			$this->runProcess('HOME=/home/' . get_current_user() . ' make cs');
+			$this->runProcess('HOME=/home/' . get_current_user() . ' make cs', $currentCommit);
 
 			$outputFilename = $instancePath . '/output.cs';
 			if ( ! is_readable($outputFilename) || ($output = file_get_contents($outputFilename)) === FALSE) {
@@ -119,10 +109,17 @@ class RunPhpCs implements \Kdyby\RabbitMq\IConsumer
 
 			$phpCs = new \CI\PhpCs\PhpCs($output);
 
-			$this->logger->addInfo(sprintf('Výstup pro commit %s je %d chyb a %d varování.', $currentCommit, $phpCs->getErrors(), $phpCs->getWarnings()), $messageJson);
+			$this->logger->addInfo(
+				sprintf(
+					'Výstup pro commit %s je %d chyb a %d varování.',
+					$currentCommit,
+					$phpCs->getErrors(),
+					$phpCs->getWarnings()
+				),
+				array_merge(['commit' => $currentCommit])
+			);
 
-			$this->statusPublicator->publish($repository, $currentCommit, $phpCs);
-
+			$this->statusPublicator->publish($build->repository, $currentCommit, $phpCs);
 		} catch (\Exception $e) {
 			$this->logger->addError($e);
 		} finally {
@@ -143,23 +140,25 @@ class RunPhpCs implements \Kdyby\RabbitMq\IConsumer
 	}
 
 
-	private function runProcess(string $cmd): string
+	private function runProcess(string $cmd, string $commit = NULL): string
 	{
+		$this->logger->addInfo('> ' . trim($cmd), $commit ? ['commit' => $commit] : []);
+
 		$this->logger->addInfo($cmd);
 		$process = new \Symfony\Component\Process\Process($cmd, NULL, NULL, NULL, NULL);
 		try {
-			$cb = function (string $type, string $buffer) {
+			$cb = function (string $type, string $buffer) use ($commit) {
 				if ($type === \Symfony\Component\Process\Process::ERR) {
-					$this->logger->addError($buffer);
+					$this->logger->addError($buffer, $commit ? ['commit' => $commit] : []);
 				} else {
-					$this->logger->addInfo($buffer);
+					$this->logger->addInfo($buffer, $commit ? ['commit' => $commit] : []);
 				}
 			};
 			$process->mustRun($cb);
 
 			return trim($process->getOutput());
 		} catch (\Symfony\Component\Process\Exception\RuntimeException $e) {
-			$this->logger->addError($e->getMessage());
+			$this->logger->addError($e->getMessage(), $commit ? ['commit' => $commit] : []);
 
 			throw $e;
 		}

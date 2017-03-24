@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types = 1);
 
 namespace CI\Builds\Tests\Consumers;
 
@@ -35,6 +35,16 @@ class RunTests implements \Kdyby\RabbitMq\IConsumer
 	 */
 	private $orm;
 
+	/**
+	 * @var \CI\Builds\CreateTestServer\CreateTestServersRepository
+	 */
+	private $createTestServersRepository;
+
+	/**
+	 * @var \CI\Builds\CreateTestServer\BuildLocator
+	 */
+	private $buildLocator;
+
 
 	public function __construct(
 		\Monolog\Logger $logger,
@@ -42,14 +52,18 @@ class RunTests implements \Kdyby\RabbitMq\IConsumer
 		\CI\Builds\Tests\BuildRequestsRepository $buildRequestsRepository,
 		\CI\Builds\Tests\StatusPublicator $statusPublicator,
 		\CI\GitHub\RepositoriesRepository $repositoriesRepository,
-		\CI\Orm\Orm $orm
+		\CI\Builds\CreateTestServer\CreateTestServersRepository $createTestServersRepository,
+		\CI\Orm\Orm $orm,
+		\CI\Builds\CreateTestServer\BuildLocator $buildLocator
 	) {
 		$this->logger = $logger;
 		$this->dateTimeProvider = $dateTimeProvider;
 		$this->buildRequestsRepository = $buildRequestsRepository;
 		$this->statusPublicator = $statusPublicator;
 		$this->repositoriesRepository = $repositoriesRepository;
+		$this->createTestServersRepository = $createTestServersRepository;
 		$this->orm = $orm;
+		$this->buildLocator = $buildLocator;
 	}
 
 
@@ -58,17 +72,26 @@ class RunTests implements \Kdyby\RabbitMq\IConsumer
 		$this->orm->clearIdentityMapAndCaches(\CI\Orm\Orm::I_KNOW_WHAT_I_AM_DOING);
 
 		try {
-			$messageJson = \Nette\Utils\Json::decode($message->getBody(), \Nette\Utils\Json::FORCE_ARRAY);
+			$this->logger->addDebug('Přijatá data jsou: ' . $message->getBody());
+			$builtCommit = \CI\Builds\BuiltCommit::fromJson($message->getBody());
 		} catch (\Nette\Utils\JsonException $e) {
 			$this->logger->addNotice('Přijatá data nejsou platná: ' . $e->getMessage());
+
 			return self::MSG_REJECT;
 		}
 
-		$repositoryName = $messageJson['repositoryName'];
-		$repositoryDirName = strtolower($messageJson['repositoryName']);
-		$instanceDirectory = $messageJson['instanceDirectory'];
+		$build = $this->createTestServersRepository->getById($builtCommit->getBuildId());
 
-		$this->logger->addInfo('Budou spuštěny testy pro repozitář "' . $repositoryName . '" a instanci "' . $instanceDirectory . '"');
+		$this->logger->addInfo(
+			sprintf(
+				'Spouští se testy pro repozitář "%s" a PR "#%s"',
+				$build->repository->name,
+				$build->pullRequestNumber
+			),
+			[
+				'commit' => $builtCommit->getCommit(),
+			]
+		);
 
 		$e = NULL;
 		set_error_handler(function ($errno, $errstr) use (&$e) {
@@ -78,44 +101,28 @@ class RunTests implements \Kdyby\RabbitMq\IConsumer
 		$success = FALSE;
 		$buildRequest = NULL;
 
+		$instancePath = $this->buildLocator->getPath($build->repository->name, $build->pullRequestNumber);
 		try {
-			$instancePath = '/var/www/' . $repositoryDirName . '/' . $instanceDirectory;
 
 			if ( ! is_readable($instancePath)) {
-				$this->logger->addNotice('Instance nebyla na serveru nalezena', $messageJson);
+				$this->logger->addNotice('Instance nebyla na serveru nalezena', ['commit' => $builtCommit->getCommit()]);
 
-				return self::MSG_REJECT;
+				//return self::MSG_REJECT;
 			}
 
 			chdir($instancePath);
 
-			if ( ! is_readable('Makefile') || ! ($content = file_get_contents('Makefile')) || strpos($content, 'run-tests:') === FALSE) {
-				$this->logger->addNotice('Instance neobsahuje příkaz pro spuštění testů', $messageJson);
-
-				return self::MSG_REJECT;
-			}
-
 			$currentCommit = $this->runProcess('git rev-parse HEAD');
-			$currentBranch = $this->runProcess('git rev-parse --abbrev-ref HEAD');
+			$currentBranch = $this->runProcess('git rev-parse --abbrev-ref HEAD', $currentCommit);
 
 			$conditions = [
-				'name' => $repositoryName,
-			];
-			$repository = $this->repositoriesRepository->getBy($conditions);
-			if ( ! $repository) {
-				$repository = new \CI\GitHub\Repository();
-				$repository->name = $repositoryName;
-				$repository = $this->repositoriesRepository->persistAndFlush($repository);
-			}
-
-			$conditions = [
-				'repository' => $repository,
+				'repository' => $build->repository,
 				'commit' => $currentCommit,
 			];
 			$buildRequest = $this->buildRequestsRepository->getBy($conditions);
 			if ( ! $buildRequest) {
 				$buildRequest = new \CI\Builds\Tests\BuildRequest();
-				$buildRequest->repository = $repository;
+				$buildRequest->repository = $build->repository;
 				$buildRequest->commit = $currentCommit;
 			}
 			$buildRequest->start = $this->dateTimeProvider->getDateTime();
@@ -128,7 +135,7 @@ class RunTests implements \Kdyby\RabbitMq\IConsumer
 
 			$this->statusPublicator->publish($buildRequest);
 
-			$this->runProcess('HOME=/home/' . get_current_user() . ' make run-tests');
+			$this->runProcess('HOME=/home/' . get_current_user() . ' make run-tests', $currentCommit);
 			$tapOutput = file_get_contents($instancePath . '/output.tap');
 			if ( ! $tapOutput) {
 				throw new \CI\Exception('Nepodařilo se dohledat výstup testů');
@@ -154,7 +161,7 @@ class RunTests implements \Kdyby\RabbitMq\IConsumer
 				try {
 					\Nette\Utils\FileSystem::delete($instancePath . '/output.tap');
 				} catch (\Nette\IOException $e) {
-					$this->logger->addError($e);
+					$this->logger->addError($e, isset($currentCommit) ? ['commit' => $currentCommit] : []);
 				}
 			}
 		}
@@ -171,23 +178,23 @@ class RunTests implements \Kdyby\RabbitMq\IConsumer
 	}
 
 
-	private function runProcess(string $cmd): string
+	private function runProcess(string $cmd, string $commit = NULL): string
 	{
 		$this->logger->addInfo($cmd);
 		$process = new \Symfony\Component\Process\Process($cmd, NULL, NULL, NULL, NULL);
 		try {
-			$cb = function (string $type, string $buffer) {
+			$cb = function (string $type, string $buffer) use ($commit) {
 				if ($type === \Symfony\Component\Process\Process::ERR) {
-					$this->logger->addError($buffer);
+					$this->logger->addError($buffer, $commit ? ['commit' => $commit] : []);
 				} else {
-					$this->logger->addInfo($buffer);
+					$this->logger->addInfo($buffer, $commit ? ['commit' => $commit] : []);
 				}
 			};
 			$process->mustRun($cb);
 
 			return trim($process->getOutput());
 		} catch (\Symfony\Component\Process\Exception\RuntimeException $e) {
-			$this->logger->addError($e->getMessage());
+			$this->logger->addError($e->getMessage(), $commit ? ['commit' => $commit] : []);
 
 			throw $e;
 		}

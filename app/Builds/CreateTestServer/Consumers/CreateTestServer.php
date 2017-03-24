@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types = 1);
 
 namespace CI\Builds\CreateTestServer\Consumers;
 
@@ -31,19 +31,24 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 	private $usersRepository;
 
 	/**
-	 * @var \Kdyby\RabbitMq\IProducer
-	 */
-	private $runTestsProducer;
-
-	/**
-	 * @var \Kdyby\RabbitMq\IProducer
-	 */
-	private $runPhpCsProducer;
-
-	/**
 	 * @var \CI\Orm\Orm
 	 */
 	private $orm;
+
+	/**
+	 * @var array|\CI\Builds\IOnBuildReady
+	 */
+	private $onBuildReady = [];
+
+	/**
+	 * @var \CI\Builds\CreateTestServer\BuildLocator
+	 */
+	private $buildLocator;
+
+	/**
+	 * @var \Kdyby\Clock\IDateTimeProvider
+	 */
+	private $dateTimeProvider;
 
 
 	public function __construct(
@@ -52,18 +57,24 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 		\CI\Builds\CreateTestServer\StatusPublicator $statusPublicator,
 		\Kdyby\Github\Client $gitHub,
 		\CI\User\UsersRepository $usersRepository,
-		\Kdyby\RabbitMq\IProducer $runTestsProducer,
-		\Kdyby\RabbitMq\IProducer $runPhpCsProducer,
-		\CI\Orm\Orm $orm
+		\CI\Orm\Orm $orm,
+		\CI\Builds\CreateTestServer\BuildLocator $buildLocator,
+		\Kdyby\Clock\IDateTimeProvider $dateTimeProvider
 	) {
 		$this->logger = $logger;
 		$this->createTestServersRepository = $createTestServersRepository;
 		$this->statusPublicator = $statusPublicator;
 		$this->gitHub = $gitHub;
 		$this->usersRepository = $usersRepository;
-		$this->runTestsProducer = $runTestsProducer;
-		$this->runPhpCsProducer = $runPhpCsProducer;
 		$this->orm = $orm;
+		$this->buildLocator = $buildLocator;
+		$this->dateTimeProvider = $dateTimeProvider;
+	}
+
+
+	public function addOnBuildReady(\CI\Builds\IOnBuildReady $onBuildReady)
+	{
+		$this->onBuildReady[] = $onBuildReady;
 	}
 
 
@@ -71,7 +82,7 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 	{
 		$this->orm->clearIdentityMapAndCaches(\CI\Orm\Orm::I_KNOW_WHAT_I_AM_DOING);
 
-		$hookId = $message->getBody();
+		$hookId = (int) $message->getBody();
 		$build = $this->createTestServersRepository->getById($hookId);
 
 		if ( ! $build) {
@@ -83,7 +94,7 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 		];
 		$systemUser = $this->usersRepository->getBy($conditions);
 
-		$build->start = new \DateTime();
+		$build->start = $this->dateTimeProvider->getDateTime();
 		$build->finish = NULL;
 		$build->output = '';
 		$this->createTestServersRepository->persistAndFlush($build);
@@ -115,6 +126,7 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 
 			$this->runProcess($build, 'git fetch --prune');
 			$this->runProcess($build, 'git checkout ' . $build->branchName);
+			$currentCommit = $this->runProcess($build, 'git rev-parse HEAD');
 			$this->runProcess($build, 'test -d temp/ && chmod -R 0777 temp/ || true');
 			$this->runProcess($build, 'test -d log/ && chmod -R 0777 log/ || true');
 
@@ -132,24 +144,6 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 				$this->runProcess($build, $cmd);
 			}
 
-			chdir('/var/www/' . strtolower($build->repository->name) . '/' . $testName);
-			$this->logger->addInfo('Aktuální adresář je ' . print_r(getcwd(), TRUE));
-
-			$publishData = \Nette\Utils\Json::encode(['repositoryName' => strtolower($build->repository->name), 'instanceDirectory' => $testName]);
-			if (is_readable('Makefile') && ($content = file_get_contents('Makefile')) && strpos($content, 'run-tests:') !== FALSE) {
-				$this->logger->addInfo('Instance obsahuje testy, budou spuštěny: ' . $publishData);
-				$this->runTestsProducer->publish($publishData);
-			} else {
-				$this->logger->addInfo('Instance neobsahuje cíl pro spuštění testů');
-			}
-
-			if (is_readable('Makefile') && ($content = file_get_contents('Makefile')) && strpos($content, 'cs:') !== FALSE) {
-				$this->logger->addInfo('Instance obsahuje coding standard, bude spuštěn: ' . $publishData);
-				$this->runPhpCsProducer->publish($publishData);
-			} else {
-				$this->logger->addInfo('Instance neobsahuje cíl pro spuštění cs');
-			}
-
 			try {
 				$client = new \GuzzleHttp\Client();
 				$testUrl = 'http://' . strtolower($build->repository->name) . '.' . $testName . '.peckadesign.com';
@@ -163,10 +157,19 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 				$success = FALSE;
 			}
 
+			/** @var \CI\Builds\IOnBuildReady $onBuildReady */
+			foreach ($this->onBuildReady as $onBuildReady) {
+				try {
+					$onBuildReady->buildReady($this->logger, $build, $currentCommit);
+				} catch (\Throwable $e) {
+					$this->logger->addWarning($e);
+				}
+			}
+
 		} catch (\Symfony\Component\Process\Exception\RuntimeException $e) {
 			$success = FALSE;
 		} finally {
-			$build->finish = new \DateTime();
+			$build->finish = $this->dateTimeProvider->getDateTime();
 			$build->success = $success;
 			$this->createTestServersRepository->persistAndFlush($build);
 		}
@@ -177,12 +180,12 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 	}
 
 
-	private function runProcess(\CI\Builds\CreateTestServer\CreateTestServer $build, string $cmd)
+	private function runProcess(\CI\Builds\CreateTestServer\CreateTestServer $build, string $cmd): string
 	{
 		$build->output .= '> ' . trim($cmd) . "\n";
-		$this->logger->addInfo('> ' . trim($cmd));
+		$this->logger->addInfo('> ' . trim($cmd), ['commit' => $build->commit]);
 
-		$cwd = '/var/www/' . strtolower($build->repository->name) . '/' . 'test' . $build->pullRequestNumber;
+		$cwd = $this->buildLocator->getPath($build->repository->name, $build->pullRequestNumber);
 
 		try {
 			\Nette\Utils\FileSystem::createDir($cwd, 755);
@@ -203,6 +206,8 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 				$this->logger->addInfo(trim($buffer));
 			};
 			$process->mustRun($cb);
+
+			return $process->getOutput();
 		} catch (\Symfony\Component\Process\Exception\RuntimeException $e) {
 			$build->output .= $e->getMessage();
 			$this->createTestServersRepository->persistAndFlush($build);
