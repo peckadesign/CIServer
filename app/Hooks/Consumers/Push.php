@@ -18,7 +18,7 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 	/**
 	 * @var array|\CI\Builds\IOnBuildReady
 	 */
-	private $onBuildReady;
+	private $onBuildReady = [];
 
 	/**
 	 * @var \CI\Builds\CreateTestServer\CreateTestServersRepository

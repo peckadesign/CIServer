@@ -140,7 +140,9 @@ services:
 		class: CI\Hooks\PushProcessor
 		arguments:
 			- @Kdyby\RabbitMq\Connection::getProducer('push')
-
+		setup:
+			- addOnBuildReady(@CI\Builds\PhpCs\PublishPhpCs)
+			- addOnBuildReady(@CI\Builds\Tests\PublishTests)
 
 	-
 		class: CI\Hooks\Consumers\OpenedPullRequest
