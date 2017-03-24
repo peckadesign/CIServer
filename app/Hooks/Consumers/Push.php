@@ -78,6 +78,13 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 		];
 		$build = $this->createTestServersRepository->getBy($conditions);
 
+		if ( ! $build) {
+			$build = new \CI\Builds\CreateTestServer\CreateTestServer();
+			$build->branchName = $branchName;
+			$build->repository = $repository;
+			$build = $this->createTestServersRepository->persistAndFlush($build);
+		}
+
 		$this->logger->addInfo('Aktualizovaná větev je "' . $branchName . '"');
 
 		$e = NULL;

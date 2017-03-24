@@ -4,9 +4,9 @@ namespace CI\Builds\CreateTestServer;
 
 /**
  * @property int $id {primary}
- * @property int $pullRequestNumber
+ * @property int|NULL $pullRequestNumber
  * @property string $branchName
- * @property string $commit
+ * @property string|NULL $commit
  * @property int|NULL $succeeded
  * @property int|NULL $failed
  * @property string|NULL $output
