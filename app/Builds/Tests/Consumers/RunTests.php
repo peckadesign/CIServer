@@ -128,7 +128,7 @@ class RunTests implements \Kdyby\RabbitMq\IConsumer
 
 			chdir($instancePath);
 
-			$currentBranch = $this->runProcess('git rev-parse --abbrev-ref HEAD', $loggingContext);
+			$currentBranch = $this->processRunner->runProcess($this->logger, $instancePath,'git rev-parse --abbrev-ref HEAD', $loggingContext);
 
 			$conditions = [
 				'repository' => $repository,
