@@ -132,10 +132,9 @@ services:
 	-
 		class: CI\Hooks\PullRequestProcessor
 		arguments:
-			- @Kdyby\RabbitMq\Connection::getProducer('openedPullRequest')
-			- @Kdyby\RabbitMq\Connection::getProducer('synchronizedPullRequest')
-			- @Kdyby\RabbitMq\Connection::getProducer('closedPullRequest')
-			- @Kdyby\RabbitMq\Connection::getProducer('push')
+			openedPullRequestProducer: @Kdyby\RabbitMq\Connection::getProducer('openedPullRequest')
+			synchronizedPullRequestProducer: @Kdyby\RabbitMq\Connection::getProducer('synchronizedPullRequest')
+			closedPullRequestProducer: @Kdyby\RabbitMq\Connection::getProducer('closedPullRequest')
 
 	-
 		class: CI\Hooks\PushProcessor
