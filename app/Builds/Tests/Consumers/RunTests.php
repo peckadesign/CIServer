@@ -116,7 +116,7 @@ class RunTests implements \Kdyby\RabbitMq\IConsumer
 		$success = FALSE;
 		$buildRequest = NULL;
 
-		$instancePath = $this->buildLocator->getPath($repository->name, $build ? $build->pullRequestNumber : );
+		$instancePath = $this->buildLocator->getPath($repository->name, $build ? $build->pullRequestNumber : NULL);
 		$this->logger->addInfo('Cesta instance je ' . $instancePath, ['commit' => $builtCommit->getCommit()]);
 		try {
 
