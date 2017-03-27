@@ -81,6 +81,12 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 		];
 		$repository = $this->repositoriesRepository->getBy($conditions);
 
+		if ( ! $repository) {
+			$this->logger->addWarning('Nebyl nalezen repozitář', $loggingContext);
+
+			return self::MSG_REJECT;
+		}
+
 		$conditions = [
 			'repository' => $repository,
 			'branchName' => $branchName,
