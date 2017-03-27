@@ -53,7 +53,7 @@ class BuildRequestPresenter extends BasePresenter
 	public function renderDefault(int $id)
 	{
 		$this->template->buildRequest = $this->buildRequest;
-		$this->template->output = file_get_contents($this->commitLogLocator->getFilePath('runTests', '8d0d4fdc0975d962256f0de2603621ec148f82db'));
+		$this->template->output = file_get_contents($this->commitLogLocator->getFilePath('runTests', $this->buildRequest->commit));
 	}
 
 
