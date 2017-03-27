@@ -91,6 +91,8 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 
 		$loggingContext = [];
 
+		$this->logger->addDebug(sprintf('Přijatá data jsou: %s', $message->getBody()), $loggingContext);
+
 		$hookId = (int) $message->getBody();
 		$build = $this->createTestServersRepository->getById($hookId);
 
