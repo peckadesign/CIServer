@@ -35,14 +35,26 @@ class RunPhpCs implements \Kdyby\RabbitMq\IConsumer
 	 */
 	private $buildLocator;
 
+	/**
+	 * @var \CI\GitHub\RepositoriesRepository
+	 */
+	private $repositoriesRepository;
+
+	/**
+	 * @var \CI\Process\ProcessRunner
+	 */
+	private $processRunner;
+
 
 	public function __construct(
 		string $logDirectory,
 		\Monolog\Logger $logger,
 		\CI\Builds\PhpCs\StatusPublicator $statusPublicator,
 		\CI\Builds\CreateTestServer\CreateTestServersRepository $createTestServersRepository,
+		\CI\GitHub\RepositoriesRepository $repositoriesRepository,
 		\CI\Orm\Orm $orm,
-		\CI\Builds\CreateTestServer\BuildLocator $buildLocator
+		\CI\Builds\CreateTestServer\BuildLocator $buildLocator,
+		\CI\Process\ProcessRunner $processRunner
 	) {
 		$this->logger = $logger;
 		$this->statusPublicator = $statusPublicator;
@@ -50,12 +62,16 @@ class RunPhpCs implements \Kdyby\RabbitMq\IConsumer
 		$this->orm = $orm;
 		$this->createTestServersRepository = $createTestServersRepository;
 		$this->buildLocator = $buildLocator;
+		$this->repositoriesRepository = $repositoriesRepository;
+		$this->processRunner = $processRunner;
 	}
 
 
 	public function process(\PhpAmqpLib\Message\AMQPMessage $message)
 	{
 		$this->orm->clearIdentityMapAndCaches(\CI\Orm\Orm::I_KNOW_WHAT_I_AM_DOING);
+
+		$loggingContext = [];
 
 		try {
 			$this->logger->addDebug('Přijatá data jsou: ' . $message->getBody());
@@ -66,17 +82,23 @@ class RunPhpCs implements \Kdyby\RabbitMq\IConsumer
 			return self::MSG_REJECT;
 		}
 
-		$build = $this->createTestServersRepository->getById($builtCommit->getBuildId());
+		$repository = $this->repositoriesRepository->getById($builtCommit->getRepositoryId());
+
+		if ($builtCommit->getBuildId()) {
+			$build = $this->createTestServersRepository->getById($builtCommit->getBuildId());
+		} else {
+			$build = NULL;
+		}
+
+		$loggingContext = array_merge($loggingContext, ['commit' => $builtCommit->getCommit()]);
 
 		$this->logger->addInfo(
 			sprintf(
-				'Spouští se PHP CS pro repozitář "%s" a větev "%s"',
-				$build->repository->name,
-				$build->branchName
+				'Spouští se PHP CS pro repozitář "%s" a commit "%s"',
+				$repository->name,
+				$builtCommit->getCommit()
 			),
-			[
-				'commit' => $builtCommit->getCommit(),
-			]
+			$loggingContext
 		);
 
 		$e = NULL;
@@ -86,22 +108,22 @@ class RunPhpCs implements \Kdyby\RabbitMq\IConsumer
 
 		$success = FALSE;
 
-		$instancePath = $this->buildLocator->getPath($build->repository->name, $build->pullRequestNumber);
-		$this->logger->addInfo('Cesta instance je ' . $instancePath, ['commit' => $builtCommit->getCommit()]);
+		$instancePath = $this->buildLocator->getPath($repository->name, $build ? $build->pullRequestNumber : NULL);
+		$this->logger->addInfo('Cesta instance je ' . $instancePath, $loggingContext);
 		try {
 			if ( ! is_readable($instancePath)) {
-				$this->logger->addNotice('Instance nebyla na serveru nalezena', ['commit' => $builtCommit->getCommit()]);
+				$this->logger->addNotice('Instance nebyla na serveru nalezena', $loggingContext);
 
 				return self::MSG_REJECT;
 			}
 
 			chdir($instancePath);
 
-			$currentCommit = $this->runProcess('git rev-parse HEAD');
+			$currentCommit = $this->processRunner->runProcess($this->logger, $instancePath, 'git rev-parse HEAD', $loggingContext);
 
 			$success = TRUE;
 
-			$this->runProcess('HOME=/home/' . get_current_user() . ' make cs', $currentCommit);
+			$this->processRunner->runProcess($this->logger, $instancePath, 'HOME=/home/' . get_current_user() . ' make cs', $loggingContext);
 
 			$outputFilename = $instancePath . '/output.cs';
 			if ( ! is_readable($outputFilename) || ($output = file_get_contents($outputFilename)) === FALSE) {
@@ -126,10 +148,10 @@ class RunPhpCs implements \Kdyby\RabbitMq\IConsumer
 					$phpCs->getErrors(),
 					$phpCs->getWarnings()
 				),
-				array_merge(['commit' => $currentCommit])
+				$loggingContext
 			);
 
-			$this->statusPublicator->publish($build->repository, $currentCommit, $phpCs);
+			$this->statusPublicator->publish($repository, $currentCommit, $phpCs);
 		} catch (\Exception $e) {
 			$this->logger->addError($e);
 		} finally {
@@ -137,7 +159,7 @@ class RunPhpCs implements \Kdyby\RabbitMq\IConsumer
 				try {
 					\Nette\Utils\FileSystem::delete($instancePath . '/output.cs');
 				} catch (\Nette\IOException $e) {
-					$this->logger->addError($e);
+					$this->logger->addError($e, $loggingContext);
 				}
 			}
 		}
@@ -149,28 +171,4 @@ class RunPhpCs implements \Kdyby\RabbitMq\IConsumer
 		}
 	}
 
-
-	private function runProcess(string $cmd, string $commit = NULL): string
-	{
-		$this->logger->addInfo('> ' . trim($cmd), $commit ? ['commit' => $commit] : []);
-
-		$this->logger->addInfo($cmd);
-		$process = new \Symfony\Component\Process\Process($cmd, NULL, NULL, NULL, NULL);
-		try {
-			$cb = function (string $type, string $buffer) use ($commit) {
-				if ($type === \Symfony\Component\Process\Process::ERR) {
-					$this->logger->addError($buffer, $commit ? ['commit' => $commit] : []);
-				} else {
-					$this->logger->addInfo($buffer, $commit ? ['commit' => $commit] : []);
-				}
-			};
-			$process->mustRun($cb);
-
-			return trim($process->getOutput());
-		} catch (\Symfony\Component\Process\Exception\RuntimeException $e) {
-			$this->logger->addError($e->getMessage(), $commit ? ['commit' => $commit] : []);
-
-			throw $e;
-		}
-	}
 }

@@ -40,9 +40,9 @@ class OpenedPullRequest implements \Kdyby\RabbitMq\IConsumer
 	}
 
 
-	public function process(\PhpAmqpLib\Message\AMQPMessage $message)
+	public function process(\PhpAmqpLib\Message\AMQPMessage $message): int
 	{
-		$hookId = $message->getBody();
+		$hookId = (int) $message->getBody();
 		$hook = $this->pullRequestRepository->getById($hookId);
 
 		if ( ! $hook) {

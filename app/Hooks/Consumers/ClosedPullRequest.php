@@ -41,7 +41,7 @@ class ClosedPullRequest implements \Kdyby\RabbitMq\IConsumer
 
 	public function process(\PhpAmqpLib\Message\AMQPMessage $message)
 	{
-		$hookId = $message->getBody();
+		$hookId = (int) $message->getBody();
 		/** @var \CI\Hooks\PullRequest $hook */
 		$hook = $this->pullRequestsRepository->getById($hookId);
 

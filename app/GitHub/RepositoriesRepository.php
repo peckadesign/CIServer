@@ -7,6 +7,7 @@ use Nextras;
 
 /**
  * @method Repository getBy(array $conds)
+ * @method Repository getById(int $id)
  */
 class RepositoriesRepository extends Nextras\Orm\Repository\Repository
 {

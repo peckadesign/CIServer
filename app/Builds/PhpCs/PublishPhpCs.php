@@ -28,13 +28,14 @@ class PublishPhpCs implements \CI\Builds\IOnBuildReady
 
 	public function buildReady(
 		\Monolog\Logger $logger,
-		\CI\Builds\CreateTestServer\CreateTestServer $createTestServer,
+		\CI\GitHub\Repository $repository,
+		?\CI\Builds\CreateTestServer\CreateTestServer $createTestServer,
 		string $commit
 	) {
 		$cwd = $this->buildLocator->getPath($createTestServer->repository->name, $createTestServer->pullRequestNumber);
 
-		if (1 || is_readable($cwd . '/Makefile') && ($content = file_get_contents($cwd . '/Makefile')) && strpos($content, 'cs:') !== FALSE) {
-			$builtCommit = new \CI\Builds\BuiltCommit($createTestServer->id, $commit);
+		if (is_readable($cwd . '/Makefile') && ($content = file_get_contents($cwd . '/Makefile')) && strpos($content, 'cs:') !== FALSE) {
+			$builtCommit = new \CI\Builds\BuiltCommit($repository->id, $createTestServer ? $createTestServer->id : NULL, $commit);
 			$publishData = \Nette\Utils\Json::encode($builtCommit);
 			$logger->addInfo('Sestavení obsahuje coding standard, bude spuštěn: ' . $publishData, ['commit' => $commit]);
 			$this->producer->publish($publishData);

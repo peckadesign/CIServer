@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 
-echo "deb http://packages.dotdeb.org jessie all" > /etc/apt/sources.list.d/dotdeb.list
-wget https://www.dotdeb.org/dotdeb.gpg -qO- | apt-key add -
+apt-get install -y --force-yes \
+	apt-transport-https \
+	lsb-release \
+	ca-certificates
 
+wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
+echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/sury.list
 
 apt-get install software-properties-common
 apt-key adv --recv-keys --keyserver hkp://keyserver.ubuntu.com:80 0xcbcb082a1bb943db
@@ -25,15 +29,15 @@ apt-get install -y --force-yes \
 	mariadb-server \
 	rabbitmq-server \
 	apache2 \
-	php7.0 \
-	libapache2-mod-php7.0 \
-	php7.0-xdebug \
-	php-curl \
-	php-xml \
-	php-zip \
-	php-mysql \
-	php-mbstring \
-	php7.0-bcmath
+	php7.1 \
+	libapache2-mod-php7.1 \
+	php7.1-xdebug \
+	php7.1-curl \
+	php7.1-xml \
+	php7.1-zip \
+	php7.1-mysql \
+	php7.1-mbstring \
+	php7.1-bcmath
 
 a2enmod rewrite
 
@@ -60,19 +64,19 @@ if ! [ -L "/etc/apache2/conf-available/ci.conf" ]; then
 fi
 a2enconf -q ci.conf
 
-if ! [ -L "/etc/php/7.0/cli/conf.d/ci.ini" ]; then
-	rm -f "/etc/php/7.0/cli/conf.d/ci.ini"
-	ln -s "/vagrant/vagrant/server/php/cli.ini" "/etc/php/7.0/cli/conf.d/ci.ini"
+if ! [ -L "/etc/php/7.1/cli/conf.d/ci.ini" ]; then
+	rm -f "/etc/php/7.1/cli/conf.d/ci.ini"
+	ln -s "/vagrant/vagrant/server/php/cli.ini" "/etc/php/7.1/cli/conf.d/ci.ini"
 fi
 
-if ! [ -L "/etc/php/7.0/apache2/conf.d/ci.ini" ]; then
-	rm -f "/etc/php/7.0/apache2/conf.d/ci.ini"
-	ln -s "/vagrant/vagrant/server/php/apache2.ini" "/etc/php/7.0/apache2/conf.d/ci.ini"
+if ! [ -L "/etc/php/7.1/apache2/conf.d/ci.ini" ]; then
+	rm -f "/etc/php/7.1/apache2/conf.d/ci.ini"
+	ln -s "/vagrant/vagrant/server/php/apache2.ini" "/etc/php/7.1/apache2/conf.d/ci.ini"
 fi
 
-if [ -f "/etc/php/7.0/mods-available/xdebug.ini" ]; then
-	rm -f "/etc/php/7.0/mods-available/xdebug.ini"
-	ln -s "/vagrant/vagrant/server/php/xdebug.ini" "/etc/php/7.0/mods-available/xdebug.ini"
+if [ -f "/etc/php/7.1/mods-available/xdebug.ini" ]; then
+	rm -f "/etc/php/7.1/mods-available/xdebug.ini"
+	ln -s "/vagrant/vagrant/server/php/xdebug.ini" "/etc/php/7.1/mods-available/xdebug.ini"
 fi
 
 chmod -R 0777 "/vagrant/temp" "/vagrant/log"

@@ -1,4 +1,4 @@
-<?php declare(strict_types = 1);
+<?php declare(strict_types=1);
 
 namespace CI\Hooks\Consumers;
 
@@ -30,9 +30,15 @@ class SynchronizedPullRequest implements \Kdyby\RabbitMq\IConsumer
 	 */
 	private $orm;
 
+	/**
+	 * @var \Kdyby\RabbitMq\IProducer
+	 */
+	private $pushProducer;
+
 
 	public function __construct(
 		\Kdyby\RabbitMq\IProducer $createTestServerProducer,
+		\Kdyby\RabbitMq\IProducer $pushProducer,
 		\CI\Hooks\PullRequestsRepository $pullRequestsRepository,
 		\CI\Builds\CreateTestServer\CreateTestServersRepository $createTestServersRepository,
 		\CI\Builds\CreateTestServer\StatusPublicator $statusPublicator,
@@ -43,6 +49,7 @@ class SynchronizedPullRequest implements \Kdyby\RabbitMq\IConsumer
 		$this->createTestServersRepository = $createTestServersRepository;
 		$this->pullRequestsRepository = $pullRequestsRepository;
 		$this->orm = $orm;
+		$this->pushProducer = $pushProducer;
 	}
 
 
@@ -50,7 +57,7 @@ class SynchronizedPullRequest implements \Kdyby\RabbitMq\IConsumer
 	{
 		$this->orm->clearIdentityMapAndCaches(\CI\Orm\Orm::I_KNOW_WHAT_I_AM_DOING);
 
-		$hookId = $message->getBody();
+		$hookId = (int) $message->getBody();
 		$hook = $this->pullRequestsRepository->getById($hookId);
 
 		if ( ! $hook) {
@@ -72,13 +79,13 @@ class SynchronizedPullRequest implements \Kdyby\RabbitMq\IConsumer
 			$this->createTestServersRepository->persistAndFlush($build);
 
 			$this->createTestServerProducer->publish($build->id);
-			$this->statusPublicator->publish($build);
 		} else {
 			$build->commit = $hook->commit;
 			$build = $this->createTestServersRepository->persistAndFlush($build);
-
-			$this->statusPublicator->publish($build);
 		}
+		$this->statusPublicator->publish($build);
+
+		$this->pushProducer->publish(\Nette\Utils\Json::encode(['repositoryName' => $hook->repository->name, 'branchName' => $hook->branchName]));
 
 		return self::MSG_ACK;
 	}

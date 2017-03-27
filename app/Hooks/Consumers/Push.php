@@ -30,17 +30,24 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 	 */
 	private $repositoriesRepository;
 
+	/**
+	 * @var \CI\Process\ProcessRunner
+	 */
+	private $processRunner;
+
 
 	public function __construct(
 		\Monolog\Logger $logger,
 		\CI\Orm\Orm $orm,
 		\CI\Builds\CreateTestServer\CreateTestServersRepository $createTestServersRepository,
-		\CI\GitHub\RepositoriesRepository $repositoriesRepository
+		\CI\GitHub\RepositoriesRepository $repositoriesRepository,
+		\CI\Process\ProcessRunner $processRunner
 	) {
 		$this->logger = $logger;
 		$this->orm = $orm;
 		$this->createTestServersRepository = $createTestServersRepository;
 		$this->repositoriesRepository = $repositoriesRepository;
+		$this->processRunner = $processRunner;
 	}
 
 
@@ -54,8 +61,10 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 	{
 		$this->orm->clearIdentityMapAndCaches(\CI\Orm\Orm::I_KNOW_WHAT_I_AM_DOING);
 
+		$loggingContext = [];
+
 		try {
-			$this->logger->addDebug('Přijatá data jsou: ' . $message->getBody());
+			$this->logger->addDebug('Přijatá data jsou: ' . $message->getBody(), $loggingContext);
 			$hookJson = \Nette\Utils\Json::decode($message->getBody(), \Nette\Utils\Json::FORCE_ARRAY);
 		} catch (\Nette\Utils\JsonException $e) {
 			return self::MSG_REJECT;
@@ -78,27 +87,13 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 		];
 		$build = $this->createTestServersRepository->getBy($conditions);
 
-		if ( ! $build) {
-			if ($branchName !== 'master') {
-				$this->logger->addInfo('Ještě se nezaložil testovací server, počká se na něj');
-				sleep(1);
-
-				return self::MSG_REJECT_REQUEUE;
-			} else {
-				$build = new \CI\Builds\CreateTestServer\CreateTestServer();
-				$build->branchName = $branchName;
-				$build->repository = $repository;
-				$build = $this->createTestServersRepository->persistAndFlush($build);
-			}
-		}
-
-		if ($build->closed) {
-			$this->logger->addInfo('PR aktualizované větve je už zavřený, nebude se aktualizovat');
+		if ($build && $build->closed) {
+			$this->logger->addInfo('PR aktualizované větve je už zavřený, nebude se aktualizovat', $loggingContext);
 
 			return self::MSG_REJECT;
 		}
 
-		$this->logger->addInfo('Aktualizovaná větev je "' . $branchName . '"');
+		$this->logger->addInfo('Aktualizovaná větev je "' . $branchName . '"', $loggingContext);
 
 		$e = NULL;
 		set_error_handler(function ($errno, $errstr) use (&$e) {
@@ -141,13 +136,15 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 
 			foreach ($instances as $instanceDirectory) {
 				try {
-					$this->logger->addInfo('Byla nalezena instance ' . $instanceDirectory);
+					$this->logger->addInfo(sprintf('Byla nalezena instance "%s"', $instanceDirectory), $loggingContext);
 
 					chdir($instanceDirectory);
 
+					$cwd = sprintf("%s/%s/%s", $repositoryPath, $repositoryName, $instanceDirectory);
+
 					try {
-						$currentBranch = $this->runProcess('git symbolic-ref --short HEAD');
-						$this->logger->addInfo('Větev instance je "' . $currentBranch . '"');
+						$currentBranch = $this->processRunner->runProcess($this->logger, $cwd, 'git symbolic-ref --short HEAD', $loggingContext);
+						$this->logger->addInfo('Větev instance je "' . $currentBranch . '"', $loggingContext);
 					} catch (\Exception $e) {
 						throw new \Exception('Nepodařilo na získat název aktuální větve', $e->getCode(), $e);
 					}
@@ -156,43 +153,44 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 						throw new \CI\Hooks\SkipException('Do změn nepřišla aktuální větev');
 					}
 
-					$this->runProcess('git fetch --prune');
+					$this->processRunner->runProcess($this->logger, $cwd, 'git fetch --prune', $loggingContext);
 
-					$this->runProcess('git reset origin/' . $currentBranch . ' --hard');
+					$this->processRunner->runProcess($this->logger, $cwd, 'git reset origin/' . $currentBranch . ' --hard', $loggingContext);
 
-					$currentCommit = $this->runProcess('git rev-parse HEAD');
+					$currentCommit = $this->processRunner->runProcess($this->logger, $cwd, 'git rev-parse HEAD', $loggingContext);
+					$loggingContext = array_merge($loggingContext, ['commit' => $currentCommit]);
 
-					$this->runProcess('git clean -fx composer.lock', $currentCommit);
+					$this->processRunner->runProcess($this->logger, $cwd, 'git clean -fx composer.lock', $loggingContext);
 
 					if (is_readable('Makefile') && ($content = file_get_contents('Makefile')) && strpos($content, 'clean-cache:') !== FALSE && strpos($content, 'build-staging:') !== FALSE) {
-						$this->runProcess('make clean-cache', $currentCommit);
-						$this->runProcess('HOME=/home/' . get_current_user() . ' make build-staging', $currentCommit);
+						$this->processRunner->runProcess($this->logger, $cwd, 'make clean-cache', $loggingContext);
+						$this->processRunner->runProcess($this->logger, $cwd, 'HOME=/home/' . get_current_user() . ' make build-staging', $loggingContext);
 					} else {
 						if (is_readable('temp/cache')) {
-							$this->runProcess('git clean -dfX temp/cache', $currentCommit);
+							$this->processRunner->runProcess($this->logger, $cwd, 'git clean -dfX temp/cache', $loggingContext);
 						} elseif (is_readable('temp')) {
-							$this->runProcess('git clean -dfX temp', $currentCommit);
+							$this->processRunner->runProcess($this->logger, $cwd, 'git clean -dfX temp', $loggingContext);
 						}
 					}
 
 					/** @var \CI\Builds\IOnBuildReady $onBuildReady */
 					foreach ($this->onBuildReady as $onBuildReady) {
-						$onBuildReady->buildReady($this->logger, $build, $currentCommit);
+						$onBuildReady->buildReady($this->logger, $repository, $build, $currentCommit);
 					}
 
-					$this->logger->addInfo('Aktualizace instance ' . $instanceDirectory . ' dokončena', ['commit' => $currentCommit]);
+					$this->logger->addInfo('Aktualizace instance "' . $instanceDirectory . '" dokončena', $loggingContext);
 				} catch (\CI\Hooks\SkipException $e) {
 					$this->logger->addInfo($e->getMessage());
 					continue;
 				} catch (\Exception $e) {
-					$this->logger->addError($e->getMessage(), isset($currentCommit) ? ['commit' => $currentCommit] : []);
+					$this->logger->addError($e->getMessage(), $loggingContext);
 					continue;
 				} finally {
 					chdir('..');
 				}
 			}
 		} catch (\Exception $e) {
-			$this->logger->addError($e->getMessage());
+			$this->logger->addError($e->getMessage(), $loggingContext);
 
 			return self::MSG_REJECT;
 		}
@@ -200,26 +198,4 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 		return self::MSG_ACK;
 	}
 
-
-	private function runProcess(string $cmd, string $commit = NULL): string
-	{
-		$this->logger->addInfo($cmd, $commit ? ['commit' => $commit] : []);
-		$process = new \Symfony\Component\Process\Process($cmd, NULL, NULL, NULL, NULL);
-		try {
-			$cb = function (string $type, string $buffer) use ($commit) {
-				if ($type === \Symfony\Component\Process\Process::ERR) {
-					$this->logger->addError($buffer, $commit ? ['commit' => $commit] : []);
-				} else {
-					$this->logger->addInfo($buffer, $commit ? ['commit' => $commit] : []);
-				}
-			};
-			$process->mustRun($cb);
-
-			return trim($process->getOutput());
-		} catch (\Symfony\Component\Process\Exception\RuntimeException $e) {
-			$this->logger->addError($e->getMessage(), $commit ? ['commit' => $commit] : []);
-
-			throw $e;
-		}
-	}
 }

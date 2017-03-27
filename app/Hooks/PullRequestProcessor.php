@@ -1,4 +1,4 @@
-<?php declare(strict_types = 1);
+<?php declare(strict_types=1);
 
 namespace CI\Hooks;
 
@@ -32,17 +32,11 @@ class PullRequestProcessor
 	 */
 	private $closedPullRequestProducer;
 
-	/**
-	 * @var \Kdyby\RabbitMq\IProducer
-	 */
-	private $pushProducer;
-
 
 	public function __construct(
 		\Kdyby\RabbitMq\IProducer $openedPullRequestProducer,
 		\Kdyby\RabbitMq\IProducer $synchronizedPullRequestProducer,
 		\Kdyby\RabbitMq\IProducer $closedPullRequestProducer,
-		\Kdyby\RabbitMq\IProducer $pushProducer,
 		PullRequestsRepository $pullRequestRepository,
 		\CI\GitHub\RepositoriesRepository $repositoriesRepository
 	) {
@@ -51,11 +45,10 @@ class PullRequestProcessor
 		$this->pullRequestsRepository = $pullRequestRepository;
 		$this->repositoriesRepository = $repositoriesRepository;
 		$this->closedPullRequestProducer = $closedPullRequestProducer;
-		$this->pushProducer = $pushProducer;
 	}
 
 
-	public function process(array $hookJson) : PullRequest
+	public function process(array $hookJson): PullRequest
 	{
 		if (isset($hookJson['pull_request']) && $hookJson['action'] === 'opened') {
 			$hook = new OpenedPullRequest();
@@ -82,18 +75,14 @@ class PullRequestProcessor
 		if ( ! $repository) {
 			$repository = new \CI\GitHub\Repository();
 			$repository->name = $repositoryName;
-			$this->repositoriesRepository->persistAndFlush($repository);
+			$this->repositoriesRepository->persist($repository);
 		}
 
 		$hook->repository = $repository;
 		$hook->hook = \Nette\Utils\Json::encode($hookJson);
-		$this->pullRequestsRepository->persistAndFlush($hook);
+		$this->pullRequestsRepository->persistAndFlush($hook, TRUE);
 
 		$producer->publish($hook->id);
-
-		if($hook instanceof SynchronizedPullRequest) {
-			$this->pushProducer->publish(\Nette\Utils\Json::encode(['repositoryName' => $hook->repository->name, 'branchName' => $hook->branchName]));
-		}
 
 		return $hook;
 	}

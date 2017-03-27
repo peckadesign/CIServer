@@ -1,4 +1,4 @@
-<?php declare(strict_types = 1);
+<?php declare(strict_types=1);
 
 namespace CI\Builds\CreateTestServer\Consumers;
 
@@ -50,6 +50,11 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 	 */
 	private $dateTimeProvider;
 
+	/**
+	 * @var \CI\Process\ProcessRunner
+	 */
+	private $processRunner;
+
 
 	public function __construct(
 		\Monolog\Logger $logger,
@@ -59,7 +64,8 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 		\CI\User\UsersRepository $usersRepository,
 		\CI\Orm\Orm $orm,
 		\CI\Builds\CreateTestServer\BuildLocator $buildLocator,
-		\Kdyby\Clock\IDateTimeProvider $dateTimeProvider
+		\Kdyby\Clock\IDateTimeProvider $dateTimeProvider,
+		\CI\Process\ProcessRunner $processRunner
 	) {
 		$this->logger = $logger;
 		$this->createTestServersRepository = $createTestServersRepository;
@@ -69,6 +75,7 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 		$this->orm = $orm;
 		$this->buildLocator = $buildLocator;
 		$this->dateTimeProvider = $dateTimeProvider;
+		$this->processRunner = $processRunner;
 	}
 
 
@@ -81,6 +88,8 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 	public function process(\PhpAmqpLib\Message\AMQPMessage $message)
 	{
 		$this->orm->clearIdentityMapAndCaches(\CI\Orm\Orm::I_KNOW_WHAT_I_AM_DOING);
+
+		$loggingContext = [];
 
 		$hookId = (int) $message->getBody();
 		$build = $this->createTestServersRepository->getById($hookId);
@@ -117,31 +126,33 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 		try {
 			$success = TRUE;
 
-			$this->runProcess($build, 'OLD_DIR=`pwd` && cd .. && rm -rf $OLD_DIR && cp -RP --preserve=all staging $OLD_DIR');
+			$cwd = $this->buildLocator->getPath($build->repository->name, $build->pullRequestNumber);
 
-			$this->runProcess($build, 'test -d temp/ && git clean -xdf temp/ || true');
-			$this->runProcess($build, 'test -d log/ && git clean -xdf log/ || true');
-			$this->runProcess($build, 'git reset origin/master --hard');
-			$this->runProcess($build, 'git clean -fx composer.lock');
+			$this->processRunner->runProcess($this->logger, $cwd, 'OLD_DIR=`pwd` && cd .. && rm -rf $OLD_DIR && cp -RP --preserve=all staging $OLD_DIR', $loggingContext);
 
-			$this->runProcess($build, 'git fetch --prune');
-			$this->runProcess($build, 'git checkout ' . $build->branchName);
-			$currentCommit = $this->runProcess($build, 'git rev-parse HEAD');
-			$this->runProcess($build, 'test -d temp/ && chmod -R 0777 temp/ || true');
-			$this->runProcess($build, 'test -d log/ && chmod -R 0777 log/ || true');
+			$this->processRunner->runProcess($this->logger, $cwd, 'test -d temp/ && git clean -xdf temp/ || true', $loggingContext);
+			$this->processRunner->runProcess($this->logger, $cwd, 'test -d log/ && git clean -xdf log/ || true', $loggingContext);
+			$this->processRunner->runProcess($this->logger, $cwd, 'git reset origin/master --hard', $loggingContext);
+			$this->processRunner->runProcess($this->logger, $cwd, 'git clean -fx composer.lock', $loggingContext);
 
-			$this->runProcess($build, 'test -f Makefile && cat Makefile | grep -q "clean:" && make clean || true');
-			$this->runProcess($build, 'test -f Makefile && cat Makefile | grep -q "build-staging:" && HOME=/home/' . get_current_user() . ' make build-staging || true');
+			$this->processRunner->runProcess($this->logger, $cwd, 'git fetch --prune', $loggingContext);
+			$this->processRunner->runProcess($this->logger, $cwd, 'git checkout ' . $build->branchName, $loggingContext);
+			$currentCommit = $this->processRunner->runProcess($this->logger, $cwd, 'git rev-parse HEAD', $loggingContext);
+			$this->processRunner->runProcess($this->logger, $cwd, 'test -d temp/ && chmod -R 0777 temp/ || true', $loggingContext);
+			$this->processRunner->runProcess($this->logger, $cwd, 'test -d log/ && chmod -R 0777 log/ || true', $loggingContext);
 
-			$defaultLocalNeonPath = '/var/www/' . strtolower($build->repository->name) . '/local.neon';
+			$this->processRunner->runProcess($this->logger, $cwd, 'test -f Makefile && cat Makefile | grep -q "clean:" && make clean || true', $loggingContext);
+			$this->processRunner->runProcess($this->logger, $cwd, 'test -f Makefile && cat Makefile | grep -q "build-staging:" && HOME=/home/' . get_current_user() . ' make build-staging || true', $loggingContext);
+
+			$defaultLocalNeonPath = $cwd . '/local.neon';
 			$testName = 'test' . $build->pullRequestNumber;
 			if (is_readable($defaultLocalNeonPath)) {
 				if ($databaseFiles) {
-					$cmd = sprintf('sed "s/testX/%s/" < %s > /var/www/%s/%s/app/config/local.neon', $testName, $defaultLocalNeonPath, strtolower($build->repository->name), $testName);
+					$cmd = sprintf('sed "s/testX/%s/" < %s > %s/app/config/local.neon', $testName, $defaultLocalNeonPath, $cwd);
 				} else {
-					$cmd = sprintf('sed "s/testX/%s/" < %s > /var/www/%s/%s/app/config/local.neon', 'staging', $defaultLocalNeonPath, strtolower($build->repository->name), $testName);
+					$cmd = sprintf('sed "s/testX/%s/" < %s > %s/app/config/local.neon', 'staging', $defaultLocalNeonPath, $cwd);
 				}
-				$this->runProcess($build, $cmd);
+				$this->processRunner->runProcess($this->logger, $cwd, $cmd, $loggingContext);
 			}
 
 			try {
@@ -160,12 +171,11 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 			/** @var \CI\Builds\IOnBuildReady $onBuildReady */
 			foreach ($this->onBuildReady as $onBuildReady) {
 				try {
-					$onBuildReady->buildReady($this->logger, $build, $currentCommit);
+					$onBuildReady->buildReady($this->logger, $build->repository, $build, $currentCommit);
 				} catch (\Throwable $e) {
 					$this->logger->addWarning($e);
 				}
 			}
-
 		} catch (\Symfony\Component\Process\Exception\RuntimeException $e) {
 			$success = FALSE;
 		} finally {
@@ -179,42 +189,4 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 		return self::MSG_ACK;
 	}
 
-
-	private function runProcess(\CI\Builds\CreateTestServer\CreateTestServer $build, string $cmd): string
-	{
-		$build->output .= '> ' . trim($cmd) . "\n";
-		$this->logger->addInfo('> ' . trim($cmd), ['commit' => $build->commit]);
-
-		$cwd = $this->buildLocator->getPath($build->repository->name, $build->pullRequestNumber);
-
-		try {
-			\Nette\Utils\FileSystem::createDir($cwd, 755);
-		} catch (\Nette\IOException $e) {
-			$build->output .= $e->getMessage();
-			$this->createTestServersRepository->persistAndFlush($build);
-
-			$this->logger->addError($e->getMessage());
-
-			throw $e;
-		}
-
-		$process = new \Symfony\Component\Process\Process($cmd, $cwd, NULL, NULL, NULL);
-		try {
-			$cb = function (string $type, string $buffer) use ($build) {
-				$build->output .= $buffer;
-				$this->createTestServersRepository->persistAndFlush($build);
-				$this->logger->addInfo(trim($buffer));
-			};
-			$process->mustRun($cb);
-
-			return $process->getOutput();
-		} catch (\Symfony\Component\Process\Exception\RuntimeException $e) {
-			$build->output .= $e->getMessage();
-			$this->createTestServersRepository->persistAndFlush($build);
-
-			$this->logger->addError($e->getMessage());
-
-			throw $e;
-		}
-	}
 }

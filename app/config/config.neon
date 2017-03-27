@@ -150,7 +150,8 @@ services:
 	-
 		class: CI\Hooks\Consumers\SynchronizedPullRequest
 		arguments:
-			- @Kdyby\RabbitMq\Connection::getProducer('createTestServer')
+			createTestServerProducer: @Kdyby\RabbitMq\Connection::getProducer('createTestServer')
+			pushProducer: @Kdyby\RabbitMq\Connection::getProducer('push')
 
 	-
 		class: CI\Hooks\Consumers\ClosedPullRequest
@@ -268,3 +269,6 @@ services:
 		class: CI\Monolog\Handlers\CommitLogLocator
 		arguments:
 			logDir: %logDir%
+
+	-
+		class: CI\Process\ProcessRunner

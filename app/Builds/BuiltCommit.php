@@ -1,4 +1,4 @@
-<?php declare(strict_types = 1);
+<?php declare(strict_types=1);
 
 namespace CI\Builds;
 
@@ -7,6 +7,11 @@ class BuiltCommit implements \JsonSerializable
 
 	/**
 	 * @var int
+	 */
+	private $repositoryId;
+
+	/**
+	 * @var int|null
 	 */
 	private $buildId;
 
@@ -17,15 +22,23 @@ class BuiltCommit implements \JsonSerializable
 
 
 	public function __construct(
-		int $buildId,
+		int $repositoryId,
+		?int $buildId,
 		string $commit
 	) {
+		$this->repositoryId = $repositoryId;
 		$this->buildId = $buildId;
 		$this->commit = $commit;
 	}
 
 
-	public function getBuildId(): int
+	public function getRepositoryId(): int
+	{
+		return $this->repositoryId;
+	}
+
+
+	public function getBuildId(): ?int
 	{
 		return $this->buildId;
 	}
@@ -39,7 +52,7 @@ class BuiltCommit implements \JsonSerializable
 
 	public function jsonSerialize(): array
 	{
-		return ['buildId' => $this->buildId, 'commit' => $this->commit];
+		return ['repositoryId' => $this->repositoryId, 'buildId' => $this->buildId, 'commit' => $this->commit];
 	}
 
 
@@ -50,6 +63,6 @@ class BuiltCommit implements \JsonSerializable
 	{
 		$json = \Nette\Utils\Json::decode($jsonString, \Nette\Utils\Json::FORCE_ARRAY);
 
-		return new self((int) $json['buildId'], (string) $json['commit']);
+		return new self((int) $json['repositoryId'], isset($json['buildId']) ? (int) $json['buildId'] : NULL, (string) $json['commit']);
 	}
 }
