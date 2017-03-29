@@ -71,7 +71,8 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 		}
 
 		$repositoryName = strtolower($hookJson['repositoryName']);
-		$branchName = $hookJson['branchName'];
+		$pullRequestNumber = $hookJson['pullRequestNumber'] ?? NULL;
+		$branchName = $hookJson['branchName'] ?? NULL;
 		if (($slashPosition = strrpos($branchName, '/')) !== FALSE) {
 			$branchName = substr($branchName, $slashPosition + 1);
 		}
@@ -89,8 +90,13 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 
 		$conditions = [
 			'repository' => $repository,
-			'branchName' => $branchName,
 		];
+		if ($branchName) {
+			$conditions['branchName'] = $branchName;
+		}
+		if ($pullRequestNumber) {
+			$conditions['pullRequestNumber'] = $pullRequestNumber;
+		}
 		$build = $this->createTestServersRepository->getBy($conditions);
 
 		if ($build && $build->closed) {

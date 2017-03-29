@@ -66,7 +66,7 @@ class SynchronizedPullRequest implements \Kdyby\RabbitMq\IConsumer
 
 		$conditions = [
 			'repository' => $hook->repository,
-			'branchName' => $hook->branchName,
+			'pullRequestNumber' => $hook->pullRequestNumber,
 		];
 		$build = $this->createTestServersRepository->getBy($conditions);
 
@@ -85,7 +85,7 @@ class SynchronizedPullRequest implements \Kdyby\RabbitMq\IConsumer
 		}
 		$this->statusPublicator->publish($build);
 
-		$this->pushProducer->publish(\Nette\Utils\Json::encode(['repositoryName' => $hook->repository->name, 'branchName' => $hook->branchName]));
+		$this->pushProducer->publish(\Nette\Utils\Json::encode(['repositoryName' => $hook->repository->name, 'pullRequestNumber' => $hook->pullRequestNumber]));
 
 		return self::MSG_ACK;
 	}
