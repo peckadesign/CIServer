@@ -73,7 +73,7 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 		$repositoryName = strtolower($hookJson['repositoryName']);
 		$pullRequestNumber = $hookJson['pullRequestNumber'] ?? NULL;
 		$branchName = $hookJson['branchName'] ?? NULL;
-		if (($slashPosition = strrpos($branchName, '/')) !== FALSE) {
+		if ($branchName && ($slashPosition = strrpos($branchName, '/')) !== FALSE) {
 			$branchName = substr($branchName, $slashPosition + 1);
 		}
 
