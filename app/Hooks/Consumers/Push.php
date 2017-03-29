@@ -105,7 +105,7 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 			return self::MSG_REJECT;
 		}
 
-		$this->logger->addInfo('Aktualizovaná větev je "' . $branchName . '"', $loggingContext);
+		$this->logger->addInfo('Aktualizovaná větev je "' . $build->branchName . '"', $loggingContext);
 
 		$e = NULL;
 		set_error_handler(function ($errno, $errstr) use (&$e) {
@@ -161,7 +161,7 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 						throw new \Exception('Nepodařilo na získat název aktuální větve', $e->getCode(), $e);
 					}
 
-					if ($branchName !== $currentBranch) {
+					if ($build->branchName !== $currentBranch) {
 						throw new \CI\Hooks\SkipException('Do změn nepřišla aktuální větev');
 					}
 
