@@ -32,7 +32,7 @@ class PublishPhpCs implements \CI\Builds\IOnBuildReady
 		?\CI\Builds\CreateTestServer\CreateTestServer $createTestServer,
 		string $commit
 	) {
-		$cwd = $this->buildLocator->getPath($createTestServer->repository->name, $createTestServer->pullRequestNumber);
+		$cwd = $this->buildLocator->getPath($repository->name, $createTestServer ? $createTestServer->pullRequestNumber : NULL);
 
 		if (is_readable($cwd . '/Makefile') && ($content = file_get_contents($cwd . '/Makefile')) && strpos($content, 'cs:') !== FALSE) {
 			$builtCommit = new \CI\Builds\BuiltCommit($repository->id, $createTestServer ? $createTestServer->id : NULL, $commit);
