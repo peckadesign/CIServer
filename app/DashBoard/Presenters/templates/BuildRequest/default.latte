@@ -1,3 +1,5 @@
+{default $output}
+
 {block content}
 
 	<p><a n:href="publishBuildRequestStatus-publish!" class="btn btn-info">Publikovat status na GitHub</a></p>
@@ -15,7 +17,7 @@
 		<dd n:if=" ! $buildRequest->finish" class="text-muted">ještě neskončilo</dd>
 	</dl>
 
-	<pre>
+	<pre n:if="$output">
 		{$output}
 	</pre>
 {/block}
