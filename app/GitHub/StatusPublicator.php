@@ -70,11 +70,14 @@ class StatusPublicator
 		$this->gitHubClient->setAccessToken($systemUser->gitHubToken);
 
 		try {
-			$this->gitHubClient->post(
+			$return = $this->gitHubClient->post(
 				'/repos/peckadesign/' . $repository->name . '/statuses/' . $commit,
 				[],
 				\Nette\Utils\Json::encode($body),
 				['Content-Type' => 'application/json']
+			);
+			$this->logger->addInfo(
+				sprintf('Pro commit %s byl nastaven status, odpověď je %s', $commit, print_r($return, TRUE))
 			);
 		} catch (\Kdyby\Github\ApiException $e) {
 			$this->logger->addError($e);

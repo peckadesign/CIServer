@@ -101,8 +101,8 @@ class RunTests implements \Kdyby\RabbitMq\IConsumer
 
 		$this->logger->addInfo(
 			sprintf(
-				'Spouští se testy pro repozitář "%s" a větev "%s"',
-				$build->repository->name,
+				'Spouští se testy pro repozitář "%s" a commit "%s"',
+				$repository->name,
 				$builtCommit->getCommit()
 			),
 			$loggingContext
