@@ -176,7 +176,7 @@ class RunTests implements \Kdyby\RabbitMq\IConsumer
 				try {
 					\Nette\Utils\FileSystem::delete($instancePath . '/output.tap');
 				} catch (\Nette\IOException $e) {
-					$this->logger->addError($e, $loggingContext);
+					$this->logger->addError($e->getMessage(), $loggingContext);
 				}
 			}
 		}
@@ -185,13 +185,17 @@ class RunTests implements \Kdyby\RabbitMq\IConsumer
 			try {
 				$this->statusPublicator->publish($buildRequest);
 			} catch (\CI\Exception $e) {
-				$this->logger->addError($e);
+				$this->logger->addError($e->getMessage(), $loggingContext);
 			}
 		}
 
 		if ($success) {
+			$this->logger->addInfo('Požadavek byl úspěšný');
+
 			return self::MSG_ACK;
 		} else {
+			$this->logger->addNotice('Požadavek bude vrácen');
+
 			return self::MSG_REJECT_REQUEUE;
 		}
 	}
