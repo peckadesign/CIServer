@@ -182,7 +182,11 @@ class RunTests implements \Kdyby\RabbitMq\IConsumer
 		}
 
 		if ($buildRequest) {
-			$this->statusPublicator->publish($buildRequest);
+			try {
+				$this->statusPublicator->publish($buildRequest);
+			} catch (\CI\Exception $e) {
+				$this->logger->addError($e);
+			}
 		}
 
 		if ($success) {
