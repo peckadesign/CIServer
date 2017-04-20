@@ -80,7 +80,7 @@ class StatusPublicator
 				sprintf('Pro commit %s byl nastaven status, odpověď je %s', $commit, print_r($return, TRUE))
 			);
 		} catch (\Kdyby\Github\ApiException $e) {
-			$this->logger->addError($e);
+			$this->logger->addError($e->getMessage());
 			throw new \CI\Exception($e->getMessage(), $e->getCode(), $e);
 		}
 	}

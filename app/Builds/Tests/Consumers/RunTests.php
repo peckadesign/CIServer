@@ -148,7 +148,11 @@ class RunTests implements \Kdyby\RabbitMq\IConsumer
 			$buildRequest->branchName = $currentBranch;
 			$buildRequest = $this->buildRequestsRepository->persistAndFlush($buildRequest);
 
-			$this->statusPublicator->publish($buildRequest);
+			try {
+				$this->statusPublicator->publish($buildRequest);
+			} catch (\CI\Exception $e) {
+				$this->logger->addError($e->getMessage(), $loggingContext);
+			}
 
 			$this->processRunner->runProcess($this->logger, $instancePath, 'HOME=/home/' . get_current_user() . ' make run-tests', $loggingContext);
 			$tapOutput = file_get_contents($instancePath . '/output.tap');
