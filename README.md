@@ -27,3 +27,8 @@ Konkrétně se spouští tyto úlohy:
 1. Dojde k aktualizi upstreamů všech testovacích prostředí změněného repozitáře. Jsou pročištěny smazané větve.
 2. Dojde k vyresetování testovacího prostředí, na kterém je přepnutá aktualizovaná větev, na aktuální verzi.
 3. Pokud je k dispozici Makefile, jsou spuštěny dva cíle: `make clean-cache` a `make build-staging`. Pokud Makefile není přítomen, je promazán adresář `temp/cache`, případně `temp`
+
+
+## Vlastní databáze pro testovací prostředí
+
+Pokud PR obsahuje DB migrace, je v `local.neon` připraven název databáze pro vytvořený PR. Ve vzorovém názvu v `local.neon` je `testX` nahrazeno za `testČísloPR`. Stejný formát je uvedený i v `dbname.conf`. Při zavření PR je podle tohoto formátu nalezena případná databáze a smazána.
