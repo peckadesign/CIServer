@@ -195,13 +195,10 @@ class RunTests implements \Kdyby\RabbitMq\IConsumer
 
 		if ($success) {
 			$this->logger->addInfo('Požadavek byl úspěšný');
-
-			return self::MSG_ACK;
 		} else {
-			$this->logger->addNotice('Požadavek bude vrácen');
-
-			return self::MSG_REJECT_REQUEUE;
+			$this->logger->addNotice('Požadavek skončil chybou');
 		}
+		return self::MSG_ACK;
 	}
 
 }
