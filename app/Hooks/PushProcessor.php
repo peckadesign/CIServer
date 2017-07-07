@@ -41,7 +41,7 @@ class PushProcessor
 		}
 
 		$repository = $this->repositoryFacade->getRepository($hookJson['repository']['name']);
-		$branchName = $hookJson['ref'];
+		$branchName = substr($hookJson['ref'], 11);
 
 		$conditions = [
 			'branchName' => $branchName,
