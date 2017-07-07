@@ -30,7 +30,13 @@ class StatusPublicator
 
 	public function publish(\CI\Builds\CreateTestServer\CreateTestServer $createTestServer)
 	{
-		if ($createTestServer->finish) {
+		if ($createTestServer->updateFinish) {
+			$description = 'Byl aktualizován ' . \CI\Utils\Helpers::dateTime($createTestServer->updateFinish);
+			$status = \CI\GitHub\StatusPublicator::STATUS_SUCCESS;
+		} elseif ($createTestServer->updateStart) {
+			$description = 'Aktualizuje se od ' . \CI\Utils\Helpers::dateTime($createTestServer->updateStart);
+			$status = \CI\GitHub\StatusPublicator::STATUS_PENDING;
+		} elseif ($createTestServer->finish) {
 			if ($createTestServer->success) {
 				$description = 'Byl vytvořen ' . \CI\Utils\Helpers::dateTime($createTestServer->finish);
 				$status = \CI\GitHub\StatusPublicator::STATUS_SUCCESS;

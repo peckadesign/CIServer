@@ -1,4 +1,4 @@
-<?php declare(strict_types=1);
+<?php declare(strict_types = 1);
 
 namespace CI\Hooks\Consumers;
 
@@ -35,19 +35,33 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 	 */
 	private $processRunner;
 
+	/**
+	 * @var \Kdyby\Clock\IDateTimeProvider
+	 */
+	private $dateTimeProvider;
+
+	/**
+	 * @var \CI\Builds\CreateTestServer\StatusPublicator
+	 */
+	private $statusPublicator;
+
 
 	public function __construct(
 		\Monolog\Logger $logger,
 		\CI\Orm\Orm $orm,
 		\CI\Builds\CreateTestServer\CreateTestServersRepository $createTestServersRepository,
 		\CI\GitHub\RepositoriesRepository $repositoriesRepository,
-		\CI\Process\ProcessRunner $processRunner
+		\CI\Process\ProcessRunner $processRunner,
+		\Kdyby\Clock\IDateTimeProvider $dateTimeProvider,
+		\CI\Builds\CreateTestServer\StatusPublicator $statusPublicator
 	) {
 		$this->logger = $logger;
 		$this->orm = $orm;
 		$this->createTestServersRepository = $createTestServersRepository;
 		$this->repositoriesRepository = $repositoriesRepository;
 		$this->processRunner = $processRunner;
+		$this->dateTimeProvider = $dateTimeProvider;
+		$this->statusPublicator = $statusPublicator;
 	}
 
 
@@ -116,6 +130,11 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 		}
 
 		$this->logger->addInfo('Aktualizovaná větev je "' . $branchName . '"', $loggingContext);
+
+		$build->updateStart = $this->dateTimeProvider->getDateTime();
+		$build->updateFinish = NULL;
+		$build = $this->createTestServersRepository->persistAndFlush($build);
+		$this->statusPublicator->publish($build);
 
 		$e = NULL;
 		set_error_handler(function ($errno, $errstr) use (&$e) {
@@ -213,8 +232,19 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 			}
 		} catch (\Exception $e) {
 			$this->logger->addError($e->getMessage(), $loggingContext);
+			if ($build) {
+				$build->updateStart = NULL;
+				$build = $this->createTestServersRepository->persistAndFlush($build);
+				$this->statusPublicator->publish($build);
+			}
 
 			return self::MSG_REJECT;
+		}
+
+		if ($build) {
+			$build->updateFinish = $this->dateTimeProvider->getDateTime();
+			$build = $this->createTestServersRepository->persistAndFlush($build);
+			$this->statusPublicator->publish($build);
 		}
 
 		return self::MSG_ACK;

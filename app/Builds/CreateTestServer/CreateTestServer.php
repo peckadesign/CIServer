@@ -14,6 +14,8 @@ namespace CI\Builds\CreateTestServer;
  * @property \DateTime|NULL $finish
  * @property bool $success {default FALSE}
  * @property bool $closed {default FALSE}
+ * @property \DateTime|NULL $updateStart
+ * @property \DateTime|NULL $updateFinish
  * @property \CI\GitHub\Repository $repository {m:1 \CI\GitHub\Repository::$createTestServer}
  */
 class CreateTestServer extends \Nextras\Orm\Entity\Entity implements
