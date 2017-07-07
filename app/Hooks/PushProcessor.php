@@ -2,9 +2,6 @@
 
 namespace CI\Hooks;
 
-use CI;
-
-
 class PushProcessor
 {
 
@@ -16,17 +13,24 @@ class PushProcessor
 	private $pushProducer;
 
 	/**
-	 * @var CI\Builds\CreateTestServer\CreateTestServersRepository
+	 * @var \CI\Builds\CreateTestServer\CreateTestServersRepository
 	 */
 	private $createTestServersRepository;
+
+	/**
+	 * @var \CI\GitHub\RepositoryFacade
+	 */
+	private $repositoryFacade;
 
 
 	public function __construct(
 		\Kdyby\RabbitMq\IProducer $pushProducer,
-		CI\Builds\CreateTestServer\CreateTestServersRepository $createTestServersRepository
+		\CI\Builds\CreateTestServer\CreateTestServersRepository $createTestServersRepository,
+		\CI\GitHub\RepositoryFacade $repositoryFacade
 	) {
 		$this->pushProducer = $pushProducer;
 		$this->createTestServersRepository = $createTestServersRepository;
+		$this->repositoryFacade = $repositoryFacade;
 	}
 
 
@@ -36,17 +40,17 @@ class PushProcessor
 			throw new UnKnownHookException();
 		}
 
-		$repositoryName = $hookJson['repository']['name'];
+		$repository = $this->repositoryFacade->getRepository($hookJson['repository']['name']);
 		$branchName = $hookJson['ref'];
 
 		$conditions = [
 			'branchName' => $branchName,
-			'this->repository->name' => $repositoryName,
+			'repository' => $repository,
 		];
 		$createTestServer = $this->createTestServersRepository->getBy($conditions);
 
 		if ( ! $createTestServer) {
-			$this->pushProducer->publish(\Nette\Utils\Json::encode(['repositoryName' => $repositoryName, 'branchName' => $branchName]));
+			$this->pushProducer->publish(\Nette\Utils\Json::encode(['repositoryName' => $repository->name, 'branchName' => $branchName]));
 		}
 	}
 }

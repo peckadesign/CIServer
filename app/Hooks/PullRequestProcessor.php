@@ -18,11 +18,6 @@ class PullRequestProcessor
 	private $pullRequestsRepository;
 
 	/**
-	 * @var \CI\GitHub\RepositoriesRepository
-	 */
-	private $repositoriesRepository;
-
-	/**
 	 * @var \Kdyby\RabbitMq\IProducer
 	 */
 	private $synchronizedPullRequestProducer;
@@ -32,19 +27,24 @@ class PullRequestProcessor
 	 */
 	private $closedPullRequestProducer;
 
+	/**
+	 * @var \CI\GitHub\RepositoryFacade
+	 */
+	private $repositoryFacade;
+
 
 	public function __construct(
 		\Kdyby\RabbitMq\IProducer $openedPullRequestProducer,
 		\Kdyby\RabbitMq\IProducer $synchronizedPullRequestProducer,
 		\Kdyby\RabbitMq\IProducer $closedPullRequestProducer,
 		PullRequestsRepository $pullRequestRepository,
-		\CI\GitHub\RepositoriesRepository $repositoriesRepository
+		\CI\GitHub\RepositoryFacade $repositoryFacade
 	) {
 		$this->openedPullRequestProducer = $openedPullRequestProducer;
 		$this->synchronizedPullRequestProducer = $synchronizedPullRequestProducer;
 		$this->pullRequestsRepository = $pullRequestRepository;
-		$this->repositoriesRepository = $repositoriesRepository;
 		$this->closedPullRequestProducer = $closedPullRequestProducer;
+		$this->repositoryFacade = $repositoryFacade;
 	}
 
 
@@ -66,17 +66,7 @@ class PullRequestProcessor
 			throw new UnKnownHookException();
 		}
 
-		$repositoryName = $hookJson['repository']['name'];
-		$conditions = [
-			'name' => $repositoryName,
-		];
-		$repository = $this->repositoriesRepository->getBy($conditions);
-
-		if ( ! $repository) {
-			$repository = new \CI\GitHub\Repository();
-			$repository->name = $repositoryName;
-			$this->repositoriesRepository->persist($repository);
-		}
+		$repository = $this->repositoryFacade->getRepository($hookJson['repository']['name']);
 
 		$hook->repository = $repository;
 		$hook->hook = \Nette\Utils\Json::encode($hookJson);

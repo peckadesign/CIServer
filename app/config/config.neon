@@ -271,3 +271,6 @@ services:
 
 	-
 		class: CI\Process\ProcessRunner
+
+	-
+		class: CI\GitHub\RepositoryFacade
