@@ -1,3 +1,3 @@
 ALTER TABLE `create_test_servers`
-  ADD `updateStart` datetime NULL,
-  ADD `updateFinish` datetime NULL;
+  ADD `update_start` datetime NULL,
+  ADD `update_finish` datetime NULL;
