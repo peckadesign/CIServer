@@ -131,10 +131,12 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 
 		$this->logger->addInfo('Aktualizovaná větev je "' . $branchName . '"', $loggingContext);
 
-		$build->updateStart = $this->dateTimeProvider->getDateTime();
-		$build->updateFinish = NULL;
-		$build = $this->createTestServersRepository->persistAndFlush($build);
-		$this->statusPublicator->publish($build);
+		if ($build) {
+			$build->updateStart = $this->dateTimeProvider->getDateTime();
+			$build->updateFinish = NULL;
+			$build = $this->createTestServersRepository->persistAndFlush($build);
+			$this->statusPublicator->publish($build);
+		}
 
 		$e = NULL;
 		set_error_handler(function ($errno, $errstr) use (&$e) {
