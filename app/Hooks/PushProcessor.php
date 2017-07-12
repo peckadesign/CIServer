@@ -1,4 +1,4 @@
-<?php declare(strict_types=1);
+<?php declare(strict_types = 1);
 
 namespace CI\Hooks;
 
@@ -13,11 +13,6 @@ class PushProcessor
 	private $pushProducer;
 
 	/**
-	 * @var \CI\Builds\CreateTestServer\CreateTestServersRepository
-	 */
-	private $createTestServersRepository;
-
-	/**
 	 * @var \CI\GitHub\RepositoryFacade
 	 */
 	private $repositoryFacade;
@@ -25,11 +20,9 @@ class PushProcessor
 
 	public function __construct(
 		\Kdyby\RabbitMq\IProducer $pushProducer,
-		\CI\Builds\CreateTestServer\CreateTestServersRepository $createTestServersRepository,
 		\CI\GitHub\RepositoryFacade $repositoryFacade
 	) {
 		$this->pushProducer = $pushProducer;
-		$this->createTestServersRepository = $createTestServersRepository;
 		$this->repositoryFacade = $repositoryFacade;
 	}
 
@@ -40,17 +33,16 @@ class PushProcessor
 			throw new UnKnownHookException();
 		}
 
+		$created = (bool) $hookJson['created'];
+		$deleted = (bool) $hookJson['deleted'];
+
 		$repository = $this->repositoryFacade->getRepository($hookJson['repository']['name']);
 		$branchName = substr($hookJson['ref'], 11);
 
-		$conditions = [
-			'branchName' => $branchName,
-			'repository' => $repository,
-		];
-		$createTestServer = $this->createTestServersRepository->getBy($conditions);
-
-		if ( ! $createTestServer) {
-			$this->pushProducer->publish(\Nette\Utils\Json::encode(['repositoryName' => $repository->name, 'branchName' => $branchName]));
+		if ($created || $deleted) {
+			return;
 		}
+
+		$this->pushProducer->publish(\Nette\Utils\Json::encode(['repositoryName' => $repository->name, 'branchName' => $branchName]));
 	}
 }

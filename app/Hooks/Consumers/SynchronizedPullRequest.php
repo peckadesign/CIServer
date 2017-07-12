@@ -1,4 +1,4 @@
-<?php declare(strict_types=1);
+<?php declare(strict_types = 1);
 
 namespace CI\Hooks\Consumers;
 
@@ -84,8 +84,6 @@ class SynchronizedPullRequest implements \Kdyby\RabbitMq\IConsumer
 			$build = $this->createTestServersRepository->persistAndFlush($build);
 		}
 		$this->statusPublicator->publish($build);
-
-		$this->pushProducer->publish(\Nette\Utils\Json::encode(['repositoryName' => $hook->repository->name, 'pullRequestNumber' => $hook->pullRequestNumber]));
 
 		return self::MSG_ACK;
 	}
