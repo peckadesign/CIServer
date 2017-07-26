@@ -12,6 +12,13 @@
 		<dt>Konec sestavení</dt>
 		<dd n:if="$createTestServer->finish">{$createTestServer->finish|dateTime}</dd>
 		<dd n:if=" ! $createTestServer->finish" class="text-muted">ještě neskončilo</dd>
+		<dt>Začátek poslední aktualizace</dt>
+		<dd n:if="$createTestServer->updateStart">{$createTestServer->updateStart|dateTime}</dd>
+		<dd n:if=" ! $createTestServer->updateStart" class="text-muted">aktualizace neproběhla</dd>
+		<dt>Konec poslední aktualizace</dt>
+		<dd n:if="$createTestServer->updateFinish">{$createTestServer->updateFinish|dateTime}</dd>
+		<dd n:if=" ! $createTestServer->updateFinish && ! $createTestServer->updateStart" class="text-muted">aktualizace neproběhla</dd>
+		<dd n:if=" ! $createTestServer->updateFinish && $createTestServer->updateStart" class="text-muted">ještě probíhá</dd>
 	</dl>
 
 	<h2>Výstup sestavení</h2>
