@@ -17,13 +17,20 @@ class PushProcessor
 	 */
 	private $repositoryFacade;
 
+	/**
+	 * @var \CI\Builds\Tests\BuildRequestsRepository
+	 */
+	private $buildRequestsRepository;
+
 
 	public function __construct(
 		\Kdyby\RabbitMq\IProducer $pushProducer,
-		\CI\GitHub\RepositoryFacade $repositoryFacade
+		\CI\GitHub\RepositoryFacade $repositoryFacade,
+		\CI\Builds\Tests\BuildRequestsRepository $buildRequestsRepository
 	) {
 		$this->pushProducer = $pushProducer;
 		$this->repositoryFacade = $repositoryFacade;
+		$this->buildRequestsRepository = $buildRequestsRepository;
 	}
 
 
@@ -40,6 +47,16 @@ class PushProcessor
 		$branchName = substr($hookJson['ref'], 11);
 
 		if ($created || $deleted) {
+			return;
+		}
+
+		$conditions = [
+			'repository' => $repository,
+			'branchName' => $branchName,
+		];
+		$build = $this->buildRequestsRepository->findBy($conditions);
+
+		if ($build) {
 			return;
 		}
 

@@ -68,6 +68,7 @@ class SynchronizedPullRequest implements \Kdyby\RabbitMq\IConsumer
 			'repository' => $hook->repository,
 			'pullRequestNumber' => $hook->pullRequestNumber,
 		];
+		/** @var \CI\Builds\CreateTestServer\CreateTestServer $build */
 		$build = $this->createTestServersRepository->getBy($conditions);
 
 		if ( ! $build) {
@@ -77,13 +78,16 @@ class SynchronizedPullRequest implements \Kdyby\RabbitMq\IConsumer
 			$build->commit = $hook->commit;
 			$build->repository = $hook->repository;
 			$this->createTestServersRepository->persistAndFlush($build);
+			$this->statusPublicator->publish($build);
 
 			$this->createTestServerProducer->publish($build->id);
 		} else {
 			$build->commit = $hook->commit;
 			$build = $this->createTestServersRepository->persistAndFlush($build);
+			$this->statusPublicator->publish($build);
+
+			$this->pushProducer->publish(\Nette\Utils\Json::encode(['repositoryName' => $build->repository->name, 'branchName' => $build->branchName]));
 		}
-		$this->statusPublicator->publish($build);
 
 		return self::MSG_ACK;
 	}
