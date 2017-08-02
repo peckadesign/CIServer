@@ -18,19 +18,19 @@ class PushProcessor
 	private $repositoryFacade;
 
 	/**
-	 * @var \CI\Builds\Tests\BuildRequestsRepository
+	 * @var \CI\Builds\CreateTestServer\CreateTestServersRepository
 	 */
-	private $buildRequestsRepository;
+	private $createTestServersRepository;
 
 
 	public function __construct(
 		\Kdyby\RabbitMq\IProducer $pushProducer,
 		\CI\GitHub\RepositoryFacade $repositoryFacade,
-		\CI\Builds\Tests\BuildRequestsRepository $buildRequestsRepository
+		\CI\Builds\CreateTestServer\CreateTestServersRepository $createTestServersRepository
 	) {
 		$this->pushProducer = $pushProducer;
 		$this->repositoryFacade = $repositoryFacade;
-		$this->buildRequestsRepository = $buildRequestsRepository;
+		$this->createTestServersRepository = $createTestServersRepository;
 	}
 
 
@@ -54,7 +54,7 @@ class PushProcessor
 			'repository' => $repository,
 			'branchName' => $branchName,
 		];
-		$build = $this->buildRequestsRepository->findBy($conditions);
+		$build = $this->createTestServersRepository->findBy($conditions);
 
 		if ($build) {
 			return;
