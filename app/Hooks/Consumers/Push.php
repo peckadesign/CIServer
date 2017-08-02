@@ -150,7 +150,9 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 			chdir($repositoryPath);
 
 			if ( ! is_readable($repositoryName)) {
-				throw new \Exception('Repozitář nebyl na serveru nalezen');
+				$this->logger->addNotice(sprintf('Repozitář "%s" nebyl na serveru nalezen', $repositoryName), $loggingContext);
+
+				return self::MSG_REJECT;
 			}
 
 			chdir($repositoryName);
@@ -165,6 +167,9 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 				if ( ! is_dir($file)) {
 					return FALSE;
 				}
+				if ( ! is_readable($file)) {
+					return FALSE;
+				}
 				if ( ! is_dir($file . '/.git')) {
 					return FALSE;
 				}
@@ -174,7 +179,9 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 			$instances = array_filter($instances, $cb);
 
 			if ( ! count($instances)) {
-				throw new \Exception('Nebyly nalezeny žádné instance repozitáře');
+				$this->logger->addNotice('Nebyly nalezeny žádné instance repozitáře', $loggingContext);
+
+				return self::MSG_REJECT;
 			}
 
 			foreach ($instances as $instanceDirectory) {
@@ -196,14 +203,14 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 						throw new \CI\Hooks\SkipException('Do změn nepřišla aktuální větev');
 					}
 
-					$this->processRunner->runProcess($this->logger, $cwd, 'git fetch --prune', $loggingContext);
+					$this->processRunner->runProcess($this->logger, $cwd, 'git fetch --prune 2>&1', $loggingContext);
 
-					$this->processRunner->runProcess($this->logger, $cwd, 'git reset origin/' . $currentBranch . ' --hard', $loggingContext);
+					$this->processRunner->runProcess($this->logger, $cwd, 'git reset origin/' . $currentBranch . ' --hard 2>&1', $loggingContext);
 
-					$currentCommit = $this->processRunner->runProcess($this->logger, $cwd, 'git rev-parse HEAD', $loggingContext);
+					$currentCommit = $this->processRunner->runProcess($this->logger, $cwd, 'git rev-parse HEAD 2>&1', $loggingContext);
 					$loggingContext = array_merge($loggingContext, ['commit' => $currentCommit]);
 
-					$this->processRunner->runProcess($this->logger, $cwd, 'git clean -fx composer.lock', $loggingContext);
+					$this->processRunner->runProcess($this->logger, $cwd, 'git clean -fx composer.lock 2>&1', $loggingContext);
 
 					if (is_readable('Makefile') && ($content = file_get_contents('Makefile')) && strpos($content, 'clean:') !== FALSE && strpos($content, 'build-staging:') !== FALSE) {
 						$this->processRunner->runProcess($this->logger, $cwd, 'make clean', $loggingContext);

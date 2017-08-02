@@ -7,7 +7,7 @@ class ProcessRunner
 
 	public function runProcess(\Monolog\Logger $logger, string $cwd, string $cmd, array $loggingContext = []): string
 	{
-		$logger->addInfo('> ' . trim($cmd), $loggingContext);
+		$logger->addDebug('> ' . trim($cmd), $loggingContext);
 
 		try {
 			\Nette\Utils\FileSystem::createDir($cwd, 755);
@@ -24,7 +24,7 @@ class ProcessRunner
 				if ($type === \Symfony\Component\Process\Process::ERR) {
 					$logger->addError($buffer, $loggingContext);
 				} else {
-					$logger->addInfo($buffer, $loggingContext);
+					$logger->addDebug($buffer, $loggingContext);
 				}
 			};
 			$process->mustRun($cb);
