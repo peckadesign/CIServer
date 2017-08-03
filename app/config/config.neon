@@ -84,6 +84,9 @@ rabbitmq:
 		runPhpCs:
 			exchange: {name: 'runPhpCs', type: direct}
 			contentType: text/plain
+		phpStan:
+			exchange: {name: 'phpCs', type: direct}
+			contentType: text/plain
 
 
 	consumers:
@@ -115,6 +118,10 @@ rabbitmq:
 			exchange: {name: 'runPhpCs', type: direct}
 			queue: {name: 'phpCs'}
 			callback: [@CI\Builds\PhpCs\Consumers\RunPhpCs, process]
+		phpStan:
+			exchange: {name: 'phpStan', type: direct}
+			queue: {name: 'phpStan'}
+			callback: [@CI\Builds\PhpStan\Consumers\PhpStan, process]
 
 
 clock:
@@ -165,6 +172,7 @@ services:
 		setup:
 			- addOnBuildReady(@CI\Builds\PhpCs\PublishPhpCs)
 			- addOnBuildReady(@CI\Builds\Tests\PublishTests)
+			- addOnBuildReady(@CI\Builds\PhpStan\PublishPhpStan)
 
 	-
 		class: CI\Builds\Tests\WorkspaceLocator
@@ -175,6 +183,11 @@ services:
 		class: CI\Builds\PhpCs\PublishPhpCs
 		arguments:
 			producer: @Kdyby\RabbitMq\Connection::getProducer('runPhpCs')
+
+	-
+		class: CI\Builds\PhpStan\PublishPhpStan
+		arguments:
+			producer: @Kdyby\RabbitMq\Connection::getProducer('phpStan')
 
 	-
 		class: CI\Builds\Tests\PublishTests
@@ -214,6 +227,7 @@ services:
 		setup:
 			- addOnBuildReady(@CI\Builds\PhpCs\PublishPhpCs)
 			- addOnBuildReady(@CI\Builds\Tests\PublishTests)
+			- addOnBuildReady(@CI\Builds\PhpStan\PublishPhpStan)
 
 	-
 		implement: CI\DashBoard\Controls\RecentCreateTestServer\IFactory
@@ -250,12 +264,27 @@ services:
 			logDirectory: %logDir%/phpcs/outputs
 
 	-
+		class: CI\Builds\PhpStan\Consumers\PhpStan
+		arguments:
+			logger: @Kdyby\Monolog\Logger::channel('phpStan')
+			logDirectory: %logDir%/phpstan/outputs
+
+	-
 		class: CI\Builds\PhpCs\StatusPublicator
+
+	-
+		class: CI\Builds\PhpStan\StatusPublicator
 
 	-
 		class: CI\DashBoard\Presenters\PhpCsPresenter
 		arguments:
 			outputDirectory: %logDir%/phpcs/outputs
+
+	-
+		class: CI\DashBoard\Presenters\PhpStanPresenter
+		arguments:
+			outputDirectory: %logDir%/phpstan/outputs
+
 
 	ciHelpers:
 		class: CI\Utils\Helpers
