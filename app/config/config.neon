@@ -85,7 +85,7 @@ rabbitmq:
 			exchange: {name: 'runPhpCs', type: direct}
 			contentType: text/plain
 		phpStan:
-			exchange: {name: 'phpCs', type: direct}
+			exchange: {name: 'phpStan', type: direct}
 			contentType: text/plain
 
 

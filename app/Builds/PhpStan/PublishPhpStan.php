@@ -19,7 +19,6 @@ class PublishPhpStan implements \CI\Builds\IOnBuildReady
 	public function __construct(
 		\CI\Builds\CreateTestServer\BuildLocator $buildLocator,
 		\Kdyby\RabbitMq\IProducer $producer
-
 	) {
 		$this->buildLocator = $buildLocator;
 		$this->producer = $producer;
