@@ -123,7 +123,7 @@ class PhpStan implements \Kdyby\RabbitMq\IConsumer
 
 			$success = TRUE;
 
-			$this->processRunner->runProcess($this->logger, $instancePath, 'HOME=/home/' . get_current_user() . ' make cs', $loggingContext);
+			$this->processRunner->runProcess($this->logger, $instancePath, 'HOME=/home/' . get_current_user() . ' make phpstan', $loggingContext);
 
 			$outputFilename = $instancePath . '/output.phpstan';
 			if ( ! is_readable($outputFilename) || ($output = file_get_contents($outputFilename)) === FALSE) {
