@@ -54,7 +54,7 @@ class PushProcessor
 			'repository' => $repository,
 			'branchName' => $branchName,
 		];
-		$build = $this->createTestServersRepository->findBy($conditions);
+		$build = $this->createTestServersRepository->getBy($conditions);
 
 		if ($build) {
 			return;
