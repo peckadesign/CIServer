@@ -228,6 +228,10 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 						$onBuildReady->buildReady($this->logger, $repository, $build, $currentCommit);
 					}
 
+					if (is_readable('Makefile') && ($content = file_get_contents('Makefile')) && strpos($content, 'build-staging-front:') !== FALSE) {
+						$this->processRunner->runProcess($this->logger, $cwd, 'HOME=/home/' . get_current_user() . ' make build-staging-front', $loggingContext);
+					}
+
 					$this->logger->addInfo('Aktualizace instance "' . $instanceDirectory . '" dokončena', $loggingContext);
 				} catch (\CI\Hooks\SkipException $e) {
 					$this->logger->addInfo($e->getMessage());

@@ -178,6 +178,9 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 					$this->logger->addWarning($e);
 				}
 			}
+
+			$this->processRunner->runProcess($this->logger, $cwd, 'test -f Makefile && cat Makefile | grep -q "build-staging-front:" && HOME=/home/' . get_current_user() . ' make build-staging-front || true', $loggingContext);
+
 		} catch (\Symfony\Component\Process\Exception\RuntimeException $e) {
 			$success = FALSE;
 		} finally {
