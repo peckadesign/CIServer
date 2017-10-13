@@ -146,7 +146,7 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 			$this->processRunner->runProcess($this->logger, $cwd, 'test -f Makefile && cat Makefile | grep -q "clean:" && make clean || true', $loggingContext);
 			$this->processRunner->runProcess($this->logger, $cwd, 'test -f Makefile && cat Makefile | grep -q "build-staging:" && HOME=/home/' . get_current_user() . ' make build-staging || true', $loggingContext);
 
-			$defaultLocalNeonPath = $cwd . '/local.neon';
+			$defaultLocalNeonPath = $cwd . '/../local.neon';
 			$testName = 'test' . $build->pullRequestNumber;
 			if (is_readable($defaultLocalNeonPath)) {
 				if ($databaseFiles) {
