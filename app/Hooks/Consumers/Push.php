@@ -212,8 +212,8 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 
 					$this->processRunner->runProcess($this->logger, $cwd, 'git clean -fx composer.lock 2>&1', $loggingContext);
 
-					if (is_readable('Makefile') && ($content = file_get_contents('Makefile')) && strpos($content, 'clean:') !== FALSE && strpos($content, 'build-staging:') !== FALSE) {
-						$this->processRunner->runProcess($this->logger, $cwd, 'make clean', $loggingContext);
+					if (is_readable('Makefile') && ($content = file_get_contents('Makefile')) && strpos($content, 'clean-cache:') !== FALSE && strpos($content, 'build-staging:') !== FALSE) {
+						$this->processRunner->runProcess($this->logger, $cwd, 'make clean-cache', $loggingContext);
 						$this->processRunner->runProcess($this->logger, $cwd, 'HOME=/home/' . get_current_user() . ' make build-staging', $loggingContext);
 					} else {
 						if (is_readable('temp/cache')) {
