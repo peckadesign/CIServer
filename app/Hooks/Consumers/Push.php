@@ -105,12 +105,16 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 		$conditions = [
 			'repository' => $repository,
 		];
-		if ($branchName) {
-			$conditions['branchName'] = $branchName;
-		}
 		if ($pullRequestNumber) {
 			$conditions['pullRequestNumber'] = $pullRequestNumber;
+		} elseif ($branchName) {
+			$conditions['branchName'] = $branchName;
+		} else {
+			$this->logger->addWarning('Nebyla předána data pro bližší identifikaci testovacího sestavení', $loggingContext);
+
+			return self::MSG_REJECT;
 		}
+
 		$build = $this->createTestServersRepository->getBy($conditions);
 
 		if ( ! $branchName && $build) {
