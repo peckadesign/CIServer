@@ -2,7 +2,7 @@
 
 namespace CI\Hooks\Consumers;
 
-class ClosedPullRequest implements \Kdyby\RabbitMq\IConsumer
+final class ClosedPullRequest implements \Kdyby\RabbitMq\IConsumer
 {
 
 	/**
@@ -11,31 +11,24 @@ class ClosedPullRequest implements \Kdyby\RabbitMq\IConsumer
 	private $pullRequestsRepository;
 
 	/**
-	 * @var \Monolog\Logger
-	 */
-	private $logger;
-
-	/**
-	 * @var string
-	 */
-	private $binDir;
-
-	/**
 	 * @var \CI\Builds\CreateTestServer\CreateTestServersRepository
 	 */
 	private $createTestServersRepository;
 
+	/**
+	 * @var \CI\Builds\RemoveBuild
+	 */
+	private $removeBuild;
+
 
 	public function __construct(
-		string $binDir,
-		\Monolog\Logger $logger,
 		\CI\Hooks\PullRequestsRepository $pullRequestsRepository,
-		\CI\Builds\CreateTestServer\CreateTestServersRepository $createTestServersRepository
+		\CI\Builds\CreateTestServer\CreateTestServersRepository $createTestServersRepository,
+		\CI\Builds\RemoveBuild $removeBuild
 	) {
-		$this->binDir = $binDir;
-		$this->logger = $logger;
 		$this->pullRequestsRepository = $pullRequestsRepository;
 		$this->createTestServersRepository = $createTestServersRepository;
+		$this->removeBuild = $removeBuild;
 	}
 
 
@@ -49,28 +42,9 @@ class ClosedPullRequest implements \Kdyby\RabbitMq\IConsumer
 			return self::MSG_REJECT;
 		}
 
-		$testServerPath = '/var/www/' . strtolower($hook->repository->name) . '/test' . $hook->pullRequestNumber;
-		if (is_dir($testServerPath)) {
-			$this->logger->addInfo('Proběhne smazání adresáře ' . $testServerPath);
-			try {
-				\Nette\Utils\FileSystem::delete($testServerPath);
-			} catch (\Nette\IOException $e) {
-				$this->logger->addError($e);
-
-				return self::MSG_REJECT_REQUEUE;
-			}
-		} else {
-			$this->logger->addNotice('Adresář projektu už neexistuje ' . $testServerPath);
-		}
-
-		$dbNameFile = '/var/www/' . strtolower($hook->repository->name) . '/dbname.cnf';
-		if (is_readable($dbNameFile)) {
-			$dbName = file_get_contents($dbNameFile);
-			$dbName = str_replace('testX', 'test' . $hook->pullRequestNumber, $dbName);
-			$this->logger->addInfo('Proběhne smazání databáze ' . $dbName);
-
-			$cmd = sprintf('mysql --defaults-extra-file=/var/www/%s/mysql.cnf -e "DROP DATABASE IF EXISTS %s;"', strtolower($hook->repository->name), $dbName);
-			$this->runProcess($cmd);
+		$deleted = $this->removeBuild->remove($hook->repository, $hook->pullRequestNumber);
+		if ( ! $deleted) {
+			return self::MSG_REJECT_REQUEUE;
 		}
 
 		$conditions = [
@@ -88,22 +62,5 @@ class ClosedPullRequest implements \Kdyby\RabbitMq\IConsumer
 	}
 
 
-	private function runProcess(string $cmd)
-	{
-		$process = new \Symfony\Component\Process\Process($cmd, $this->binDir, NULL, NULL, NULL);
-		try {
-			$cb = function (string $type, string $buffer) {
-				if ($type === \Symfony\Component\Process\Process::ERR) {
-					$this->logger->addError($buffer);
-				} else {
-					$this->logger->addInfo($buffer);
-				}
-			};
-			$process->mustRun($cb);
-		} catch (\Symfony\Component\Process\Exception\RuntimeException $e) {
-			$this->logger->addError($e->getMessage());
 
-			throw $e;
-		}
-	}
 }

@@ -161,9 +161,6 @@ services:
 
 	-
 		class: CI\Hooks\Consumers\ClosedPullRequest
-		arguments:
-			- %binDir%
-			- @Kdyby\Monolog\Logger::channel('closedPullRequestHook')
 
 	-
 		class: CI\Hooks\Consumers\Push
@@ -303,3 +300,15 @@ services:
 
 	-
 		class: CI\GitHub\RepositoryFacade
+
+	-
+		class: CI\Builds\RemoveBuild
+		arguments:
+			- %binDir%
+			- @Kdyby\Monolog\Logger::channel('closedPullRequestHook')
+
+	-
+		class: CI\Builds\Commands\RemoveClosedPullRequestsCommand
+		tags: [kdyby.console.command]
+
+
