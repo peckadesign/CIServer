@@ -36,7 +36,7 @@ class PhpStan
 	{
 		$this->errors = 0;
 		foreach (explode("\n", $this->input) as $line) {
-			$line = strtoupper($line);
+			$line = trim(strtoupper($line));
 
 			if (substr($line, 0, 7) !== '[ERROR]') {
 				continue;
