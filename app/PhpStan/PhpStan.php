@@ -36,13 +36,13 @@ class PhpStan
 	{
 		$this->errors = 0;
 		foreach (explode("\n", $this->input) as $line) {
-			$line = trim(strtoupper($line));
+			$line = trim($line);
 
 			if (substr($line, 0, 7) !== '[ERROR]') {
 				continue;
 			}
 
-			preg_match('/^[ERROR] Found (?<errors>[0-9]+) errors?/', $line, $matches);
+			preg_match('/^\[ERROR\] Found (?<errors>[0-9]+) errors?/', $line, $matches);
 
 			isset($matches['errors']) && $this->errors += (int) $matches['errors'];
 		}
