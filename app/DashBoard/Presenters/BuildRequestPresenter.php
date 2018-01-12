@@ -4,7 +4,6 @@ namespace CI\DashBoard\Presenters;
 
 use CI;
 
-
 class BuildRequestPresenter extends BasePresenter
 {
 
@@ -28,12 +27,19 @@ class BuildRequestPresenter extends BasePresenter
 	 */
 	private $commitLogLocator;
 
+	/**
+	 * @var string
+	 */
+	private $outputDirectory;
+
 
 	public function __construct(
+		string $outputDirectory,
 		CI\Builds\Tests\BuildRequestsRepository $buildRequests,
 		CI\DashBoard\Controls\PublishBuildRequestStatus\IFactory $publishBuildRequestStatusFactory,
 		CI\Monolog\Handlers\CommitLogLocator $commitLogLocator
 	) {
+		$this->outputDirectory = $outputDirectory;
 		$this->buildRequests = $buildRequests;
 		$this->publishBuildRequestStatusFactory = $publishBuildRequestStatusFactory;
 		$this->commitLogLocator = $commitLogLocator;
@@ -58,8 +64,21 @@ class BuildRequestPresenter extends BasePresenter
 	}
 
 
-	protected function createComponentPublishBuildRequestStatus() : CI\DashBoard\Controls\PublishBuildRequestStatus\Control
+	protected function createComponentPublishBuildRequestStatus(): CI\DashBoard\Controls\PublishBuildRequestStatus\Control
 	{
 		return $this->publishBuildRequestStatusFactory->create($this->buildRequest);
 	}
+
+
+	public function actionOutput(string $id = NULL)
+	{
+		$filename = sprintf("%s/%s.cs", $this->outputDirectory, $id);
+		if ( ! is_readable($filename)) {
+			$this->error();
+		}
+
+		$this->getHttpResponse()->setContentType('text/plain');
+		$this->sendResponse(new \Nette\Application\Responses\TextResponse(file_get_contents($filename)));
+	}
+
 }

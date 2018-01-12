@@ -4,3 +4,4 @@
 !.gitignore
 !/phpcs
 !/phpstan
+!/tests

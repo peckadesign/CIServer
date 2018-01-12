@@ -36,6 +36,7 @@ class StatusPublicator implements IStatusPublicator
 	public function publish(BuildRequest $buildRequest)
 	{
 		$includeResults = FALSE;
+		$link = $this->linkGenerator->link('DashBoard:BuildRequest:', [$buildRequest->id]);
 
 		if ( ! $buildRequest->start) {
 			$state = 'pending';
@@ -50,6 +51,7 @@ class StatusPublicator implements IStatusPublicator
 			$state = 'failure';
 			$message = 'Past vedle pasti';
 			$includeResults = TRUE;
+			$link = $this->linkGenerator->link('DashBoard:BuildRequest:output', [$buildRequest->commit]);
 		} elseif ($buildRequest->succeeded) {
 			$state = 'success';
 			$message = 'Funguje';
@@ -76,7 +78,7 @@ class StatusPublicator implements IStatusPublicator
 			$state,
 			$message,
 			'Testy',
-			$this->linkGenerator->link('DashBoard:BuildRequest:', [$buildRequest->id])
+			$link
 		);
 	}
 }

@@ -253,6 +253,7 @@ services:
 		class: CI\Builds\Tests\Consumers\RunTests
 		arguments:
 			logger: @Kdyby\Monolog\Logger::channel('runTests')
+			logDirectory: %logDir%/tests/outputs
 
 	-
 		class: CI\Builds\PhpCs\Consumers\RunPhpCs
@@ -276,6 +277,11 @@ services:
 		class: CI\DashBoard\Presenters\PhpCsPresenter
 		arguments:
 			outputDirectory: %logDir%/phpcs/outputs
+
+	-
+		class: CI\DashBoard\Presenters\BuildRequestPresenter
+		arguments:
+			outputDirectory: %logDir%/tests/outputs
 
 	-
 		class: CI\DashBoard\Presenters\PhpStanPresenter

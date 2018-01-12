@@ -50,8 +50,14 @@ class RunTests implements \Kdyby\RabbitMq\IConsumer
 	 */
 	private $processRunner;
 
+	/**
+	 * @var string
+	 */
+	private $logDirectory;
+
 
 	public function __construct(
+		string $logDirectory,
 		\Monolog\Logger $logger,
 		\Kdyby\Clock\IDateTimeProvider $dateTimeProvider,
 		\CI\Builds\Tests\BuildRequestsRepository $buildRequestsRepository,
@@ -62,6 +68,7 @@ class RunTests implements \Kdyby\RabbitMq\IConsumer
 		\CI\Builds\CreateTestServer\BuildLocator $buildLocator,
 		\CI\Process\ProcessRunner $processRunner
 	) {
+		$this->logDirectory = $logDirectory;
 		$this->logger = $logger;
 		$this->dateTimeProvider = $dateTimeProvider;
 		$this->buildRequestsRepository = $buildRequestsRepository;
@@ -155,10 +162,20 @@ class RunTests implements \Kdyby\RabbitMq\IConsumer
 			}
 
 			$this->processRunner->runProcess($this->logger, $instancePath, 'HOME=/home/' . get_current_user() . ' make run-tests', $loggingContext);
-			$tapOutput = file_get_contents($instancePath . '/output.tap');
+			$outputFilename = $instancePath . '/output.tap';
+			$tapOutput = file_get_contents($outputFilename);
 			if ( ! $tapOutput) {
 				throw new \CI\Exception('Nepodařilo se dohledat výstup testů');
 			}
+
+			\Nette\Utils\FileSystem::copy(
+				$outputFilename,
+				sprintf(
+					'%s/%s.cs',
+					$this->logDirectory,
+					$builtCommit->getCommit()
+				)
+			);
 
 			$tap = new \CI\Tap\Tap($tapOutput);
 
