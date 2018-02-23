@@ -317,4 +317,6 @@ services:
 		class: CI\Builds\Commands\RemoveClosedPullRequestsCommand
 		tags: [kdyby.console.command]
 
-
+	-
+		class: CI\Builds\Commands\UpdateOpenedPullRequestsStatusCommand
+		tags: [kdyby.console.command]
