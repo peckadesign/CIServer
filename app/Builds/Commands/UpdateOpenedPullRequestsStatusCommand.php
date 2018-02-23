@@ -59,7 +59,7 @@ final class UpdateOpenedPullRequestsStatusCommand extends \Symfony\Component\Con
 		$this->gitHub->setAccessToken($systemUser->gitHubToken);
 		foreach ($builds as $build) {
 			$pullRequest = $this->gitHub->api('/repos/peckadesign/' . $build->repository->name . '/pulls/' . $build->pullRequestNumber);
-			if ($pullRequest['state'] === 'opened') {
+			if ($pullRequest['state'] === 'open') {
 				continue;
 			}
 			$build->closed = TRUE;
