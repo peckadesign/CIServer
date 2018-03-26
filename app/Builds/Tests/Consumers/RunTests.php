@@ -181,7 +181,6 @@ class RunTests implements \Kdyby\RabbitMq\IConsumer
 
 			$buildRequest->succeeded = $tap->getSucceeded();
 			$buildRequest->failed = $tap->getFailed();
-			$buildRequest->output = $tapOutput;
 			$buildRequest->finish = $this->dateTimeProvider->getDateTime();
 			$this->buildRequestsRepository->persistAndFlush($buildRequest);
 
