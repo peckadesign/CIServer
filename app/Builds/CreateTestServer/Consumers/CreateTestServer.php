@@ -143,9 +143,6 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 			$this->processRunner->runProcess($this->logger, $cwd, 'test -d temp/ && chmod -R 0777 temp/ || true', $loggingContext);
 			$this->processRunner->runProcess($this->logger, $cwd, 'test -d log/ && chmod -R 0777 log/ || true', $loggingContext);
 
-			$this->processRunner->runProcess($this->logger, $cwd, 'test -f Makefile && cat Makefile | grep -q "clean:" && make clean || true', $loggingContext);
-			$this->processRunner->runProcess($this->logger, $cwd, 'test -f Makefile && cat Makefile | grep -q "build-staging:" && HOME=/home/' . get_current_user() . ' make build-staging || true', $loggingContext);
-
 			$defaultLocalNeonPath = $cwd . '/../local.neon';
 			$testName = 'test' . $build->pullRequestNumber;
 			if (is_readable($defaultLocalNeonPath)) {
@@ -155,6 +152,32 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 					$cmd = sprintf('sed "s/testX/%s/" < %s > %s/app/config/local.neon', 'staging', $defaultLocalNeonPath, $cwd);
 				}
 				$this->processRunner->runProcess($this->logger, $cwd, $cmd, $loggingContext);
+			}
+
+			try {
+				$this->processRunner->runProcess($this->logger, $cwd, 'test -f Makefile && cat Makefile | grep -q "clean:"', $loggingContext);
+				try {
+					$this->processRunner->runProcess($this->logger, $cwd, 'make clean', $loggingContext);
+				} catch (\Symfony\Component\Process\Exception\RuntimeException $e) {
+					$success = FALSE;
+				}
+			} catch (\Symfony\Component\Process\Exception\RuntimeException $e) {
+			}
+			if ( ! $success) {
+				throw $e;
+			}
+
+			try {
+				$this->processRunner->runProcess($this->logger, $cwd, 'test -f Makefile && cat Makefile | grep -q "build-staging:"', $loggingContext);
+				try {
+					$this->processRunner->runProcess($this->logger, $cwd, 'HOME=/home/' . get_current_user() . ' make build-staging', $loggingContext);
+				} catch (\Symfony\Component\Process\Exception\RuntimeException $e) {
+					$success = FALSE;
+				}
+			} catch (\Symfony\Component\Process\Exception\RuntimeException $e) {
+			}
+			if ( ! $success) {
+				throw $e;
 			}
 
 			try {
@@ -179,7 +202,18 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 				}
 			}
 
-			$this->processRunner->runProcess($this->logger, $cwd, 'test -f Makefile && cat Makefile | grep -q "build-staging-front:" && HOME=/home/' . get_current_user() . ' make build-staging-front || true', $loggingContext);
+			try {
+				$this->processRunner->runProcess($this->logger, $cwd, 'test -f Makefile && cat Makefile | grep -q "build-staging-front:"', $loggingContext);
+				try {
+					$this->processRunner->runProcess($this->logger, $cwd, 'HOME=/home/' . get_current_user() . ' make build-staging-front', $loggingContext);
+				} catch (\Symfony\Component\Process\Exception\RuntimeException $e) {
+					$success = FALSE;
+				}
+			} catch (\Symfony\Component\Process\Exception\RuntimeException $e) {
+			}
+			if ( ! $success) {
+				throw $e;
+			}
 
 		} catch (\Symfony\Component\Process\Exception\RuntimeException $e) {
 			$success = FALSE;
