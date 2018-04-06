@@ -248,6 +248,7 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 					$this->logger->addError($e->getMessage(), $loggingContext);
 					if ($build) {
 						$build->success = FALSE;
+						$build = $this->createTestServersRepository->persist($build);
 					}
 					continue;
 				} finally {
@@ -258,6 +259,7 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 			$this->logger->addError($e->getMessage(), $loggingContext);
 			if ($build) {
 				$build->updateStart = NULL;
+				$build->success = FALSE;
 				$build = $this->createTestServersRepository->persistAndFlush($build);
 				$this->statusPublicator->publish($build);
 			}
