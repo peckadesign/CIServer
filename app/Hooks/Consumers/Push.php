@@ -244,7 +244,7 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 				} catch (\CI\Hooks\SkipException $e) {
 					$this->logger->addInfo($e->getMessage());
 					continue;
-				} catch (\Exception $e) {
+				} catch (\Throwable $e) {
 					$this->logger->addError($e->getMessage(), $loggingContext);
 					if ($build) {
 						$build->success = FALSE;
