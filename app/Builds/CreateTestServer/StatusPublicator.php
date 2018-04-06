@@ -41,8 +41,8 @@ class StatusPublicator
 				$description = 'Byl vytvořen ' . \CI\Utils\Helpers::dateTime($createTestServer->finish);
 				$status = \CI\GitHub\StatusPublicator::STATUS_SUCCESS;
 			} else {
-				$description = 'Byl vytvořen ' . \CI\Utils\Helpers::dateTime($createTestServer->finish);
-				$status = \CI\GitHub\StatusPublicator::STATUS_SUCCESS;
+				$description = 'Nepodařilo se sestavit';
+				$status = \CI\GitHub\StatusPublicator::STATUS_FAILURE;
 			}
 		} elseif ($createTestServer->start) {
 			$description = 'Probíhá příprava od ' . \CI\Utils\Helpers::dateTime($createTestServer->start);
