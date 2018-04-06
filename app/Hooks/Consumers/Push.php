@@ -188,6 +188,10 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 				return self::MSG_REJECT;
 			}
 
+			if ($build) {
+				$build->success = TRUE;
+			}
+
 			foreach ($instances as $instanceDirectory) {
 				try {
 					$this->logger->addInfo(sprintf('Byla nalezena instance "%s"', $instanceDirectory), $loggingContext);
