@@ -271,6 +271,7 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 			if ($build->success) {
 				$build->updateFinish = $this->dateTimeProvider->getDateTime();
 			} else {
+				$build->updateStart = NULL;
 				$build->updateFinish = NULL;
 			}
 			$build = $this->createTestServersRepository->persistAndFlush($build);
