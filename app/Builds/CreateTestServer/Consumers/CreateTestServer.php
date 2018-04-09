@@ -156,30 +156,23 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 				$this->processRunner->runProcess($this->logger, $cwd, $cmd, $loggingContext);
 			}
 
-			try {
-				$this->processRunner->runProcess($this->logger, $cwd, 'test -f Makefile && cat Makefile | grep -q "clean:"', $loggingContext);
+
+			if (is_readable('Makefile') && ($content = file_get_contents('Makefile')) && strpos($content, 'clean:') !== FALSE) {
 				try {
 					$this->processRunner->runProcess($this->logger, $cwd, 'make clean', $loggingContext);
 				} catch (\Symfony\Component\Process\Exception\RuntimeException $e) {
+					$this->logger->addWarning($e, $loggingContext);
 					$success = FALSE;
 				}
-			} catch (\Symfony\Component\Process\Exception\RuntimeException $e) {
-			}
-			if ( ! $success) {
-				throw $e;
 			}
 
-			try {
-				$this->processRunner->runProcess($this->logger, $cwd, 'test -f Makefile && cat Makefile | grep -q "build-staging:"', $loggingContext);
+			if (is_readable('Makefile') && ($content = file_get_contents('Makefile')) && strpos($content, 'build-staging:') !== FALSE) {
 				try {
 					$this->processRunner->runProcess($this->logger, $cwd, 'HOME=/home/' . get_current_user() . ' make build-staging', $loggingContext);
 				} catch (\Symfony\Component\Process\Exception\RuntimeException $e) {
+					$this->logger->addWarning($e, $loggingContext);
 					$success = FALSE;
 				}
-			} catch (\Symfony\Component\Process\Exception\RuntimeException $e) {
-			}
-			if ( ! $success) {
-				throw $e;
 			}
 
 			try {
@@ -189,9 +182,11 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 				$build->output .= PHP_EOL . $testUrl . ': ' . $response->getStatusCode() . PHP_EOL;
 
 				if ($response->getStatusCode() !== 200) {
+					$this->logger->addWarning('Homepage vrátila ' . $response->getStatusCode(), $loggingContext);
 					$success = FALSE;
 				}
 			} catch (\GuzzleHttp\Exception\RequestException $e) {
+				$this->logger->addWarning($e, $loggingContext);
 				$success = FALSE;
 			}
 
@@ -205,7 +200,12 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 			}
 
 			if (is_readable('Makefile') && ($content = file_get_contents('Makefile')) && strpos($content, 'build-staging-front:') !== FALSE) {
-				$this->processRunner->runProcess($this->logger, $cwd, 'HOME=/home/' . get_current_user() . ' make build-staging-front', $loggingContext);
+				try {
+					$this->processRunner->runProcess($this->logger, $cwd, 'HOME=/home/' . get_current_user() . ' make build-staging-front', $loggingContext);
+				} catch (\Symfony\Component\Process\Exception\RuntimeException $e) {
+					$this->logger->addWarning($e, $loggingContext);
+					$success = FALSE;
+				}
 			}
 
 			$this->logger->addInfo('Vytvoření testovacího serveru "' . $cwd . '" dokončeno', $loggingContext);
