@@ -132,6 +132,8 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 
 			$this->processRunner->runProcess($this->logger, $cwd, 'OLD_DIR=`pwd` && cd .. && rm -rf $OLD_DIR && cp -RP --preserve=all staging $OLD_DIR', $loggingContext);
 
+			chdir($cwd);
+
 			$this->processRunner->runProcess($this->logger, $cwd, 'test -d temp/ && git clean -xdf temp/ || true', $loggingContext);
 			$this->processRunner->runProcess($this->logger, $cwd, 'test -d log/ && git clean -xdf log/ || true', $loggingContext);
 			$this->processRunner->runProcess($this->logger, $cwd, 'git reset origin/master --hard', $loggingContext);
@@ -202,18 +204,11 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 				}
 			}
 
-			try {
-				$this->processRunner->runProcess($this->logger, $cwd, 'test -f Makefile && cat Makefile | grep -q "build-staging-front:"', $loggingContext);
-				try {
-					$this->processRunner->runProcess($this->logger, $cwd, 'HOME=/home/' . get_current_user() . ' make build-staging-front', $loggingContext);
-				} catch (\Symfony\Component\Process\Exception\RuntimeException $e) {
-					$success = FALSE;
-				}
-			} catch (\Symfony\Component\Process\Exception\RuntimeException $e) {
+			if (is_readable('Makefile') && ($content = file_get_contents('Makefile')) && strpos($content, 'build-staging-front:') !== FALSE) {
+				$this->processRunner->runProcess($this->logger, $cwd, 'HOME=/home/' . get_current_user() . ' make build-staging-front', $loggingContext);
 			}
-			if ( ! $success) {
-				throw $e;
-			}
+
+			$this->logger->addInfo('Vytvoření testovacího serveru "' . $cwd . '" dokončeno', $loggingContext);
 
 		} catch (\Symfony\Component\Process\Exception\RuntimeException $e) {
 			$success = FALSE;
