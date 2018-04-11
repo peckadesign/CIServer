@@ -175,21 +175,6 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 				}
 			}
 
-			try {
-				$client = new \GuzzleHttp\Client();
-				$testUrl = 'http://' . strtolower($build->repository->name) . '.' . $testName . '.peckadesign.com';
-				$response = $client->request('GET', $testUrl);
-				$build->output .= PHP_EOL . $testUrl . ': ' . $response->getStatusCode() . PHP_EOL;
-
-				if ($response->getStatusCode() !== 200) {
-					$this->logger->addWarning('Homepage vrátila ' . $response->getStatusCode(), $loggingContext);
-					$success = FALSE;
-				}
-			} catch (\GuzzleHttp\Exception\RequestException $e) {
-				$this->logger->addWarning($e, $loggingContext);
-				$success = FALSE;
-			}
-
 			/** @var \CI\Builds\IOnBuildReady $onBuildReady */
 			foreach ($this->onBuildReady as $onBuildReady) {
 				try {
