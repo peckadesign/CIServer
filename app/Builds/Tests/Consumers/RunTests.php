@@ -149,7 +149,6 @@ class RunTests implements \Kdyby\RabbitMq\IConsumer
 			}
 			$buildRequest->start = $this->dateTimeProvider->getDateTime();
 			$buildRequest->finish = NULL;
-			$buildRequest->output = NULL;
 			$buildRequest->succeeded = NULL;
 			$buildRequest->failed = NULL;
 			$buildRequest->branchName = $currentBranch;

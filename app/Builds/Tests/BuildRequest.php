@@ -8,7 +8,6 @@ namespace CI\Builds\Tests;
  * @property string $branchName
  * @property int|NULL $succeeded
  * @property int|NULL $failed
- * @property string|NULL $output
  * @property \DateTime|NULL $start
  * @property \DateTime|NULL $finish
  * @property \CI\GitHub\Repository $repository {m:1 \CI\GitHub\Repository::$buildRequests}

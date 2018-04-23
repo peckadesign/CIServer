@@ -20,11 +20,6 @@
 		<dd n:if=" ! $createTestServer->updateFinish && ! $createTestServer->updateStart" class="text-muted">aktualizace neproběhla</dd>
 		<dd n:if=" ! $createTestServer->updateFinish && $createTestServer->updateStart" class="text-muted">ještě probíhá</dd>
 	</dl>
-
-	<h2>Výstup sestavení</h2>
-	<pre>
-		{$createTestServer->output}
-	</pre>
 {/block}
 
 {block title}

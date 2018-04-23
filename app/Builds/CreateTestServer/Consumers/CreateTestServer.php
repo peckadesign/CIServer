@@ -107,7 +107,6 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 
 		$build->start = $this->dateTimeProvider->getDateTime();
 		$build->finish = NULL;
-		$build->output = '';
 		$this->createTestServersRepository->persistAndFlush($build);
 
 		$this->statusPublicator->publish($build);
