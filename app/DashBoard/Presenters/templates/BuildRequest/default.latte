@@ -16,10 +16,6 @@
 		<dd n:if="$buildRequest->finish">{$buildRequest->finish|dateTime}</dd>
 		<dd n:if=" ! $buildRequest->finish" class="text-muted">ještě neskončilo</dd>
 	</dl>
-
-	<pre n:if="$output">
-		{$output}
-	</pre>
 {/block}
 
 {block title}

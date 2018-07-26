@@ -9,7 +9,6 @@ namespace CI\Builds\CreateTestServer;
  * @property string|NULL $commit
  * @property int|NULL $succeeded
  * @property int|NULL $failed
- * @property string|NULL $output
  * @property \DateTime|NULL $start
  * @property \DateTime|NULL $finish
  * @property bool $success {default FALSE}
