@@ -81,7 +81,6 @@ class StatusPublicator
 			);
 		} catch (\Kdyby\Github\ApiException $e) {
 			$this->logger->addError($e->getMessage());
-			throw new \CI\Exception($e->getMessage(), $e->getCode(), $e);
 		}
 	}
 }
