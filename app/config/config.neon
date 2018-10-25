@@ -94,30 +94,44 @@ rabbitmq:
 			exchange: {name: 'openedPullRequest', type: direct}
 			queue: {name: 'openedPullRequest'}
 			callback: [@CI\Hooks\Consumers\OpenedPullRequest, process]
+			qos:
+				prefetchCount: 1
 		synchronizedPullRequest:
 			exchange: {name: 'synchronizedPullRequest', type: direct}
 			queue: {name: 'synchronizedPullRequest'}
 			callback: [@CI\Hooks\Consumers\SynchronizedPullRequest, process]
+			qos:
+				prefetchCount: 1
 		closedPullRequest:
 			exchange: {name: 'closedPullRequest', type: direct}
 			queue: {name: 'closedPullRequest'}
 			callback: [@CI\Hooks\Consumers\ClosedPullRequest, process]
+			qos:
+				prefetchCount: 1
 		createTestServer:
 			exchange: {name: 'createTestServer', type: direct}
 			queue: {name: 'createTestServer'}
 			callback: [@CI\Builds\CreateTestServer\Consumers\CreateTestServer, process]
+			qos:
+				prefetchCount: 1
 		push:
 			exchange: {name: 'push', type: direct}
 			queue: {name: 'push'}
 			callback: [@CI\Hooks\Consumers\Push, process]
+			qos:
+				prefetchCount: 1
 		runTests:
 			exchange: {name: 'runTests', type: direct}
 			queue: {name: 'runTests'}
 			callback: [@CI\Builds\Tests\Consumers\RunTests, process]
+			qos:
+				prefetchCount: 1
 		runPhpCs:
 			exchange: {name: 'runPhpCs', type: direct}
 			queue: {name: 'phpCs'}
 			callback: [@CI\Builds\PhpCs\Consumers\RunPhpCs, process]
+			qos:
+				prefetchCount: 1
 		phpStan:
 			exchange: {name: 'phpStan', type: direct}
 			queue: {name: 'phpStan'}
