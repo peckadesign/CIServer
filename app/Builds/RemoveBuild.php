@@ -51,6 +51,18 @@ final class RemoveBuild
 			$this->runProcess($cmd);
 		}
 
+		$defaultLocalNeonPath = '/var/www/' . strtolower($repository->name) . '/local.neon';
+		if (is_readable($defaultLocalNeonPath)) {
+			$neonString = \file_get_contents($defaultLocalNeonPath);
+			$neon = \Nette\Neon\Neon::decode($neonString);
+			$redisDatabase = $neon['redis']['database'] ?? 0;
+
+			$cmd = sprintf('redis-cli -n %s KEYS "Nette.Journal.%s*" | xargs --delim=\'\n\' redis-cli -n %s DEL', $redisDatabase, 'redis' . $pullRequestNumber, $redisDatabase);
+			$this->runProcess($cmd);
+			$cmd = sprintf('redis-cli -n %s KEYS "Nette.Storage.%s*" | xargs --delim=\'\n\' redis-cli -n %s DEL', $redisDatabase, 'redis' . $pullRequestNumber, $redisDatabase);
+			$this->runProcess($cmd);
+		}
+
 		return TRUE;
 	}
 

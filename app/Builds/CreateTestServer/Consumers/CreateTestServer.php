@@ -153,6 +153,9 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 					$cmd = sprintf('sed "s/testX/%s/" < %s > %s/app/config/local.neon', 'staging', $defaultLocalNeonPath, $cwd);
 				}
 				$this->processRunner->runProcess($this->logger, $cwd, $cmd, $loggingContext);
+
+				$redisCmd = sprintf('sed "s/redisX/%s/" < %s > %s/app/config/local.neon', $testName, $defaultLocalNeonPath, $cwd);
+				$this->processRunner->runProcess($this->logger, $cwd, $redisCmd, $loggingContext);
 			}
 
 
