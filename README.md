@@ -32,3 +32,15 @@ Konkrétně se spouští tyto úlohy:
 ## Vlastní databáze pro testovací prostředí
 
 Pokud PR obsahuje DB migrace, je v `local.neon` připraven název databáze pro vytvořený PR. Ve vzorovém názvu v `local.neon` je `testX` nahrazeno za `testČísloPR`. Stejný formát je uvedený i v `dbname.conf`. Při zavření PR je podle tohoto formátu nalezena případná databáze a smazána.
+
+
+## Vlastní redis namespace pro testovací prostředí
+
+Aby se správně nastavil vlastní redis namespace pro testovací server je potřeba mít v `local.neon` nakonfigurovaný redis.
+Stejně tak jako s `testX` pro databázi je nutné specifikovat pro redis `redisX`. 
+Database se specifikuje aby se redis dokázal zpětně uklidit a promazat všechny klíče vytvořené v namespacu testovacího serveru.
+```neon
+redis:
+	database: 3
+	cacheKey: redisX
+```

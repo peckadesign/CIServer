@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "551e2d77fe3ba29dc0f47337dd8c2fa3",
+    "content-hash": "9db391f8667fb2a5e6e5c4634f4bda65",
     "packages": [
         {
             "name": "guzzlehttp/guzzle",
@@ -477,7 +477,7 @@
                 "nette",
                 "sdk"
             ],
-            "time": "2016-01-09 23:47:58"
+            "time": "2016-01-09T23:47:58+00:00"
         },
         {
             "name": "kdyby/monolog",
@@ -651,7 +651,7 @@
                 "rabbit",
                 "rabbitmq"
             ],
-            "time": "2016-10-27 08:01:35"
+            "time": "2016-10-27T08:01:35+00:00"
         },
         {
             "name": "kdyby/strict-objects",
@@ -1358,16 +1358,16 @@
         },
         {
             "name": "nette/neon",
-            "version": "v2.4.1",
+            "version": "v2.4.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nette/neon.git",
-                "reference": "1a78ff64b1e161ebccc03bdf9366450a69365f5b"
+                "reference": "5e72b1dd3e2d34f0863c5561139a19df6a1ef398"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nette/neon/zipball/1a78ff64b1e161ebccc03bdf9366450a69365f5b",
-                "reference": "1a78ff64b1e161ebccc03bdf9366450a69365f5b",
+                "url": "https://api.github.com/repos/nette/neon/zipball/5e72b1dd3e2d34f0863c5561139a19df6a1ef398",
+                "reference": "5e72b1dd3e2d34f0863c5561139a19df6a1ef398",
                 "shasum": ""
             },
             "require": {
@@ -1406,9 +1406,16 @@
                     "homepage": "https://nette.org/contributors"
                 }
             ],
-            "description": "Nette NEON: parser & generator for Nette Object Notation",
+            "description": "🍸 Nette NEON: encodes and decodes NEON file format.",
             "homepage": "http://ne-on.org",
-            "time": "2017-01-13T08:00:19+00:00"
+            "keywords": [
+                "export",
+                "import",
+                "neon",
+                "nette",
+                "yaml"
+            ],
+            "time": "2018-03-21T12:12:21+00:00"
         },
         {
             "name": "nette/php-generator",
