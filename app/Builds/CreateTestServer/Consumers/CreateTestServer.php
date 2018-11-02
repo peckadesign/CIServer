@@ -145,17 +145,16 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 			$this->processRunner->runProcess($this->logger, $cwd, 'test -d log/ && chmod -R 0777 log/ || true', $loggingContext);
 
 			$defaultLocalNeonPath = $cwd . '/../local.neon';
-			$testName = 'test' . $build->pullRequestNumber;
 			if (is_readable($defaultLocalNeonPath)) {
-				if ($databaseFiles) {
-					$cmd = sprintf('sed "s/testX/%s/" < %s > %s/app/config/local.neon', $testName, $defaultLocalNeonPath, $cwd);
-				} else {
-					$cmd = sprintf('sed "s/testX/%s/" < %s > %s/app/config/local.neon', 'staging', $defaultLocalNeonPath, $cwd);
-				}
-				$this->processRunner->runProcess($this->logger, $cwd, $cmd, $loggingContext);
+				$testName = 'staging';
+				$redisCacheName = 'redis' . $build->pullRequestNumber;
 
-				$redisCmd = sprintf('sed "s/redisX/%s/" < %s > %s/app/config/local.neon', $testName, $defaultLocalNeonPath, $cwd);
-				$this->processRunner->runProcess($this->logger, $cwd, $redisCmd, $loggingContext);
+				if ($databaseFiles) {
+					$testName = 'test' . $build->pullRequestNumber;
+				}
+
+				$cmd = sprintf('sed "s/testX/%s/; s/redisX/%s/" < %s > %s/app/config/local.neon', $testName, $redisCacheName, $defaultLocalNeonPath, $cwd);
+				$this->processRunner->runProcess($this->logger, $cwd, $cmd, $loggingContext);
 			}
 
 
