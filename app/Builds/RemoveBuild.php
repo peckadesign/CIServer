@@ -42,7 +42,7 @@ final class RemoveBuild
 		}
 
 		$dbNameFile = '/var/www/' . strtolower($repository->name) . '/dbname.cnf';
-		if (is_readable($dbNameFile)) {
+		if (is_readable($dbNameFile) && \is_readable(\sprintf('/var/www/%s/mysql.cnf', strtolower($repository->name)))) {
 			$dbName = file_get_contents($dbNameFile);
 			$dbName = str_replace('testX', 'test' . $pullRequestNumber, $dbName);
 			$this->logger->addInfo('Proběhne smazání databáze ' . $dbName);
