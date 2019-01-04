@@ -9,6 +9,10 @@ extensions:
 	rabbitmq: Kdyby\RabbitMq\DI\RabbitMqExtension
 
 
+includes:
+	- ../OAuth2Login/oauth2login.neon
+
+
 orm:
 	model: CI\Orm\Orm
 
@@ -212,9 +216,6 @@ services:
 		implement: CI\DashBoard\Controls\RecentBuildRequests\IFactory
 
 	-
-		implement: CI\DashBoard\Controls\Logout\IFactory
-
-	-
 		implement: CI\DashBoard\Controls\PublishBuildRequestStatus\IFactory
 
 	-
@@ -225,11 +226,6 @@ services:
 
 	-
 		class: CI\Builds\CreateTestServer\StatusPublicator
-
-	-
-		class: CI\DashBoard\Presenters\OctocatsPresenter
-		arguments:
-			- %wwwDir%
 
 	-
 		class: CI\Builds\CreateTestServer\Consumers\CreateTestServer

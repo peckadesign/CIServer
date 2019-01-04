@@ -1,0 +1,27 @@
+includes:
+	- Login/login.neon
+
+
+parameters:
+	oauth2login:
+		providerUrl: "https://peckanotes.peckadesign.cz"
+		clientId: ""
+		clientSecret: ""
+
+
+services:
+	-
+		class: CI\OAuth2Login\ProviderFactory
+		arguments:
+			oauth2ProviderUrl: %oauth2login.providerUrl%
+			clientId: %oauth2login.clientId%
+			clientSecret: %oauth2login.clientSecret%
+
+	-
+		class: \CI\OAuth2Login\PeckaNotesProvider
+		factory: @\CI\OAuth2Login\ProviderFactory::create()
+
+	-
+		class: CI\OAuth2Login\StateStorage
+		arguments:
+			sessionSection: @Nette\Http\Session::getSection("oauth2login.state")
