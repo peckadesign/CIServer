@@ -66,6 +66,7 @@ class UserPresenter extends BasePresenter
 				$me = $gitHub->api('/user');
 
 				$user = $this->usersRepository->getById($this->getUser()->getId());
+				$user->gitHubId = $me['id'];
 				$user->gitHubToken = $gitHub->getAccessToken();
 				$this->usersRepository->persistAndFlush($user);
 
