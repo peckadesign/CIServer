@@ -10,7 +10,7 @@ use Nextras;
  * @property int $id {primary}
  * @property int|null $gitHubId
  * @property string $gitHubName
- * @property string $gitHubToken
+ * @property string|null $gitHubToken
  * @property bool $systemUser {default FALSE}
  * @property string|null $oauth2token
  * @property string $email
