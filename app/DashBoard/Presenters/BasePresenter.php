@@ -22,11 +22,6 @@ abstract class BasePresenter extends Nette\Application\UI\Presenter
 	private $recentBuildRequestsControlFactory;
 
 	/**
-	 * @var CI\DashBoard\Controls\Logout\IFactory
-	 */
-	private $logoutControlFactory;
-
-	/**
 	 * @var CI\DashBoard\Controls\RecentCreateTestServer\IFactory
 	 */
 	private $recentCreateTestServerFactory;
@@ -44,13 +39,11 @@ abstract class BasePresenter extends Nette\Application\UI\Presenter
 
 	public function injectServices(
 		CI\DashBoard\Controls\RecentBuildRequests\IFactory $recentBuildRequestControlFactory,
-		CI\DashBoard\Controls\Logout\IFactory $logoutControlFactory,
 		CI\DashBoard\Controls\RecentCreateTestServer\IFactory $recentCreateTestServerFactory,
 		CI\User\UsersRepository $usersRepository,
 		CI\DashBoard\Controls\RabbitMQStatus\IFactory $rabbitMqStatusControlFactory
 	) {
 		$this->recentBuildRequestsControlFactory = $recentBuildRequestControlFactory;
-		$this->logoutControlFactory = $logoutControlFactory;
 		$this->recentCreateTestServerFactory = $recentCreateTestServerFactory;
 		$this->usersRepository = $usersRepository;
 		$this->rabbitMqStatusControlFactory = $rabbitMqStatusControlFactory;
@@ -60,12 +53,6 @@ abstract class BasePresenter extends Nette\Application\UI\Presenter
 	protected function createComponentRecentBuildRequests() : CI\DashBoard\Controls\RecentBuildRequests\Control
 	{
 		return $this->recentBuildRequestsControlFactory->create();
-	}
-
-
-	protected function createComponentLogout() : CI\DashBoard\Controls\Logout\Control
-	{
-		return $this->logoutControlFactory->create();
 	}
 
 

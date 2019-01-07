@@ -8,10 +8,12 @@ use Nextras;
 
 /**
  * @property int $id {primary}
- * @property int $gitHubId
+ * @property int|null $gitHubId
  * @property string $gitHubName
  * @property string $gitHubToken
  * @property bool $systemUser {default FALSE}
+ * @property string|null $oauth2token
+ * @property string $email
  */
 class User extends Nextras\Orm\Entity\Entity implements Nette\Security\IIdentity
 {

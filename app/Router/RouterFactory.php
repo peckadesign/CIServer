@@ -37,46 +37,6 @@ class RouterFactory
 
 		$metadata = [
 			'module' => 'DashBoard',
-			'presenter' => 'Octocats',
-			'action' => 'default',
-			NULL => [
-				Nette\Application\Routers\Route::FILTER_OUT => function (array $parameters) {
-					if ($parameters['presenter'] === 'Octocats' && $parameters['action'] === 'random') {
-
-						$cache = new Nette\Caching\Cache($this->storage);
-
-						$fb = function (&$dp) {
-							$octodexFeedContent = file_get_contents('http://feeds.feedburner.com/Octocats');
-							$octodexFeed = new \SimpleXMLElement($octodexFeedContent);
-							$octocats = [];
-							foreach ($octodexFeed->entry as $entry) {
-								$imageUrl = (string) $entry->content->div->a->img['src'];
-								if (Nette\Utils\Validators::isUrl($imageUrl)) {
-									$octocat = substr($imageUrl, strrpos($imageUrl, '/') + 1);
-									$octocats[] = $octocat;
-								}
-							}
-
-							return $octocats;
-						};
-
-						$octocats = $cache->load('octocats', $fb);
-
-						shuffle($octocats);
-						$octocat = reset($octocats);
-
-						$parameters = [];
-						$parameters['octocat'] = $octocat;
-					}
-
-					return $parameters;
-				},
-			],
-		];
-		$router[] = new Nette\Application\Routers\Route('https://octodex.github.com/images/<octocat [a-z0-9\.]+>', $metadata);
-
-		$metadata = [
-			'module' => 'DashBoard',
 			'presenter' => 'HomePage',
 			'action' => 'default',
 		];
@@ -96,6 +56,11 @@ class RouterFactory
 			],
 		];
 		$router[] = new Nette\Application\Routers\Route('https://github.com/peckadesign/<repository [a-zA-Z0-9/]+>/tree/<branch>', $metadata);
+
+		$router[] = new \Nette\Application\Routers\Route('oauth2/<action>', [
+			'module' => 'OAuth2Login:Login',
+			'presenter' => 'OAuth2',
+		]);
 
 		$metadata = [
 			NULL => [

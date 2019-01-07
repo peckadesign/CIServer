@@ -29,7 +29,8 @@
 		"kdyby/monolog": "^1.2",
 		"kdyby/clock": "^0.4.0",
 		"kdyby/rabbitmq": "dev-master#76ed30a080803b2e0b350bc34207760d36fb2a0f",
-		"nette/neon": "^2.4"
+		"nette/neon": "^2.4",
+		"league/oauth2-client": "2.*"
 	},
 	"require-dev": {
 		"nette/tester": "1.7.*"
@@ -38,7 +39,8 @@
 	"autoload": {
 		"psr-4": {
 			"CI\\": "app",
-			"CITests\\": "tests"
+			"CITests\\": "tests",
+			"Pd\\OAuth2Login\\": "oauth2"
 		}
 	}
 }

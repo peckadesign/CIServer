@@ -2,17 +2,11 @@
 
 namespace CI\DashBoard\Presenters;
 
-use CI;
-use Kdyby;
-use Nette;
-use Tracy;
-
-
-class LoginPresenter extends Nette\Application\UI\Presenter
+final class LoginPresenter extends \Nette\Application\UI\Presenter
 {
 
 	/**
-	 * @var Kdyby\Github\Client
+	 * @var \Kdyby\Github\Client
 	 */
 	private $github;
 
@@ -23,63 +17,50 @@ class LoginPresenter extends Nette\Application\UI\Presenter
 	public $backLink;
 
 	/**
-	 * @var CI\User\UsersRepository
+	 * @var \CI\User\UsersRepository
 	 */
 	private $users;
 
+	/**
+	 * @var \CI\OAuth2Login\PeckaNotesProvider
+	 */
+	private $authProvider;
+
+	/**
+	 * @var \CI\OAuth2Login\StateStorage
+	 */
+	private $stateStorage;
+
+	/**
+	 * @var \CI\OAuth2Login\Login\BackLinkStorage
+	 */
+	private $backLinkStorage;
+
 
 	public function __construct(
-		Kdyby\Github\Client $gitHub,
-		CI\User\UsersRepository $users
+		\Kdyby\Github\Client $gitHub,
+		\CI\User\UsersRepository $users,
+		\CI\OAuth2Login\PeckaNotesProvider $authProvider,
+		\CI\OAuth2Login\StateStorage $stateStorage,
+		\CI\OAuth2Login\Login\BackLinkStorage $backLinkStorage
 	) {
 		parent::__construct();
 		$this->github = $gitHub;
 		$this->users = $users;
+		$this->authProvider = $authProvider;
+		$this->stateStorage = $stateStorage;
+		$this->backLinkStorage = $backLinkStorage;
 	}
 
 
-	protected function createComponentGitHubLogin() : Kdyby\Github\UI\LoginDialog
+	public function actionDefault(): void
 	{
-		$dialog = new Kdyby\Github\UI\LoginDialog($this->github);
+		$authorizationUrl = $this->authProvider->getAuthorizationUrl();
 
-		$dialog->onResponse[] = function (Kdyby\Github\UI\LoginDialog $dialog) {
-			/** @var Kdyby\Github\Client $gitHub */
-			$gitHub = $dialog->getClient();
+		$this->stateStorage->saveState($this->authProvider->getState());
+		$this->backLinkStorage->saveBackLink($this->backLink);
 
-			if ( ! $gitHub->getUser()) {
-				$this->flashMessage("Sorry bro, github authentication failed.");
-
-				return;
-			}
-
-			try {
-				$me = $gitHub->api('/user');
-
-				$conditions = [
-					'gitHubId' => $gitHub->getUser(),
-				];
-				if ( ! $user = $this->users->getBy($conditions)) {
-					$user = new CI\User\User();
-					$user->gitHubId = $me['id'];
-					$user->gitHubName = $me['name'];
-				}
-				$user->gitHubToken = $gitHub->getAccessToken();
-				$this->users->persistAndFlush($user);
-
-				$this->getUser()->login($user);
-			} catch (Kdyby\Github\ApiException $e) {
-
-				Tracy\Debugger::log($e, 'github');
-				$this->flashMessage("Sorry bro, github authentication failed hard.");
-			}
-
-			if ($this->backLink) {
-				$this->restoreRequest($this->backLink);
-			}
-
-			$this->redirect(':DashBoard:HomePage:default');
-		};
-
-		return $dialog;
+		$this->redirectUrl($authorizationUrl);
 	}
+
 }
