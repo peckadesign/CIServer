@@ -1,0 +1,5 @@
+services:
+	-
+		class: CI\OAuth2Login\Login\BackLinkStorage
+		arguments:
+			sessionSection: @Nette\Http\Session::getSection("oauth2login.backlink")
