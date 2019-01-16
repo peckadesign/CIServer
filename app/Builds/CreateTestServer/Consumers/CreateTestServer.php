@@ -180,7 +180,7 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 
 			if (\is_readable(self::DOCKER_COMPOSE_CI_YML)) {
 				try {
-					$this->processRunner->runProcess($this->logger, $cwd, 'HOME=/home/' . \get_current_user() . ' docker-compose up -f ' . self::DOCKER_COMPOSE_CI_YML, $loggingContext);
+					$this->processRunner->runProcess($this->logger, $cwd, 'docker-compose -d -f ' . self::DOCKER_COMPOSE_CI_YML . ' up', $loggingContext);
 				} catch (\Symfony\Component\Process\Exception\RuntimeException $e) {
 					$this->logger->addWarning($e, $loggingContext);
 					$success = FALSE;
