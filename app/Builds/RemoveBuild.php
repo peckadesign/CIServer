@@ -29,6 +29,12 @@ final class RemoveBuild
 	{
 		$testServerPath = '/var/www/' . strtolower($repository->name) . '/test' . $pullRequestNumber;
 		if (is_dir($testServerPath)) {
+
+			$dockerComposeFile = \is_readable($testServerPath . '/' . \CI\Builds\CreateTestServer\Consumers\CreateTestServer::DOCKER_COMPOSE_CI_YML);
+			if ($dockerComposeFile) {
+				$this->runProcess('docker-compose down -f ' . $dockerComposeFile);
+			}
+
 			$this->logger->addInfo('Proběhne smazání adresáře ' . $testServerPath);
 			try {
 				\Nette\Utils\FileSystem::delete($testServerPath);
