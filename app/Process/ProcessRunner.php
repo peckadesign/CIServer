@@ -1,4 +1,4 @@
-<?php declare(strict_types=1);
+<?php declare(strict_types = 1);
 
 namespace CI\Process;
 
@@ -13,7 +13,10 @@ class ProcessRunner
 			\Nette\Utils\FileSystem::createDir($cwd, 755);
 		} catch (\Nette\IOException $e) {
 
-			$loggingContext->addError($e->getMessage(), $loggingContext);
+			$cb = static function (string $message) use ($logger, $loggingContext) {
+				$logger->addError($message, $loggingContext);
+			};
+			$this->logMultiline($e->getMessage(), $cb);
 
 			throw $e;
 		}
@@ -22,18 +25,35 @@ class ProcessRunner
 		try {
 			$cb = function (string $type, string $buffer) use ($logger, $loggingContext) {
 				if ($type === \Symfony\Component\Process\Process::ERR) {
-					$logger->addError($buffer, $loggingContext);
+					$cb = static function (string $message) use ($logger, $loggingContext) {
+						$logger->addError($message, $loggingContext);
+					};
+					$this->logMultiline($buffer, $cb);
 				} else {
-					$logger->addDebug($buffer, $loggingContext);
+					$cb = static function (string $message) use ($logger, $loggingContext) {
+						$logger->addDebug($message, $loggingContext);
+					};
+					$this->logMultiline($buffer, $cb);
 				}
 			};
 			$process->mustRun($cb);
 
 			return trim($process->getOutput());
 		} catch (\Symfony\Component\Process\Exception\RuntimeException $e) {
-			$logger->addError($e->getMessage(), $loggingContext);
+			$cb = static function (string $message) use ($logger, $loggingContext) {
+				$logger->addError($message, $loggingContext);
+			};
+			$this->logMultiline($e->getMessage(), $cb);
 
 			throw $e;
 		}
 	}
+
+
+	private function logMultiline(string $message, callable $loggingCallback): void
+	{
+		$messageLines = \explode("\n", \trim($message));
+		\array_map($loggingCallback, $messageLines);
+	}
+
 }

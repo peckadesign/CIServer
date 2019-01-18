@@ -245,7 +245,9 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 					$this->logger->addInfo($e->getMessage());
 					continue;
 				} catch (\Throwable $e) {
-					$this->logger->addError($e->getMessage(), $loggingContext);
+					if ( ! $e instanceof \Symfony\Component\Process\Exception\RuntimeException) {
+						$this->logger->addError($e->getMessage(), $loggingContext);
+					}
 					if ($build) {
 						$build->success = FALSE;
 						$build = $this->createTestServersRepository->persist($build);
