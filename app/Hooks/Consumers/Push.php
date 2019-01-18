@@ -222,7 +222,7 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 
 					if (is_readable('Makefile') && ($content = file_get_contents('Makefile')) && strpos($content, 'clean-cache:') !== FALSE && strpos($content, 'build-staging:') !== FALSE) {
 						$this->processRunner->runProcess($this->logger, $cwd, 'make clean-cache', $loggingContext);
-						$this->processRunner->runProcess($this->logger, $cwd, 'HOME=/home/' . get_current_user() . ' make build-staging', $loggingContext);
+						$this->processRunner->runProcess($this->logger, $cwd, 'HOME=/home/' . get_current_user() . ' COMPOSE_INTERACTIVE_NO_CLI=1 make build-staging', $loggingContext);
 					} else {
 						if (is_readable('temp/cache')) {
 							$this->processRunner->runProcess($this->logger, $cwd, 'git clean -dfX temp/cache', $loggingContext);
@@ -237,7 +237,7 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 					}
 
 					if (is_readable('Makefile') && ($content = file_get_contents('Makefile')) && strpos($content, 'build-staging-front:') !== FALSE) {
-						$this->processRunner->runProcess($this->logger, $cwd, 'HOME=/home/' . get_current_user() . ' make build-staging-front', $loggingContext);
+						$this->processRunner->runProcess($this->logger, $cwd, 'HOME=/home/' . get_current_user() . ' COMPOSE_INTERACTIVE_NO_CLI=1 make build-staging-front', $loggingContext);
 					}
 
 					$this->logger->addInfo('Aktualizace instance "' . $instanceDirectory . '" dokončena', $loggingContext);

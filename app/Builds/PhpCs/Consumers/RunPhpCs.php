@@ -123,7 +123,7 @@ class RunPhpCs implements \Kdyby\RabbitMq\IConsumer
 
 			$success = TRUE;
 
-			$this->processRunner->runProcess($this->logger, $instancePath, 'HOME=/home/' . get_current_user() . ' make cs', $loggingContext);
+			$this->processRunner->runProcess($this->logger, $instancePath, 'HOME=/home/' . get_current_user() . ' COMPOSE_INTERACTIVE_NO_CLI=1 make cs', $loggingContext);
 
 			$outputFilename = $instancePath . '/output.cs';
 			if ( ! is_readable($outputFilename) || ($output = file_get_contents($outputFilename)) === FALSE) {

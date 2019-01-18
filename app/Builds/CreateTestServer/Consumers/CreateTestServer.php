@@ -171,7 +171,7 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 
 			if (is_readable('Makefile') && ($content = file_get_contents('Makefile')) && strpos($content, 'build-staging:') !== FALSE) {
 				try {
-					$this->processRunner->runProcess($this->logger, $cwd, 'HOME=/home/' . get_current_user() . ' make build-staging', $loggingContext);
+					$this->processRunner->runProcess($this->logger, $cwd, 'HOME=/home/' . get_current_user() . ' COMPOSE_INTERACTIVE_NO_CLI=1 make build-staging', $loggingContext);
 				} catch (\Symfony\Component\Process\Exception\RuntimeException $e) {
 					$this->logger->addWarning($e, $loggingContext);
 					$success = FALSE;
@@ -199,7 +199,7 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 
 			if (is_readable('Makefile') && ($content = file_get_contents('Makefile')) && strpos($content, 'build-staging-front:') !== FALSE) {
 				try {
-					$this->processRunner->runProcess($this->logger, $cwd, 'HOME=/home/' . get_current_user() . ' make build-staging-front', $loggingContext);
+					$this->processRunner->runProcess($this->logger, $cwd, 'HOME=/home/' . get_current_user() . ' COMPOSE_INTERACTIVE_NO_CLI=1 make build-staging-front', $loggingContext);
 				} catch (\Symfony\Component\Process\Exception\RuntimeException $e) {
 					$this->logger->addWarning($e, $loggingContext);
 					$success = FALSE;

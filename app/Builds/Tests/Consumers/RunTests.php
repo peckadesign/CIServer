@@ -160,7 +160,7 @@ class RunTests implements \Kdyby\RabbitMq\IConsumer
 				$this->logger->addError($e->getMessage(), $loggingContext);
 			}
 
-			$this->processRunner->runProcess($this->logger, $instancePath, 'HOME=/home/' . get_current_user() . ' make run-tests', $loggingContext);
+			$this->processRunner->runProcess($this->logger, $instancePath, 'HOME=/home/' . get_current_user() . ' COMPOSE_INTERACTIVE_NO_CLI=1 make run-tests', $loggingContext);
 			$outputFilename = $instancePath . '/output.tap';
 			$tapOutput = file_get_contents($outputFilename);
 			if ( ! $tapOutput) {
