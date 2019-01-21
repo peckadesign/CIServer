@@ -30,6 +30,8 @@ final class RemoveBuild
 		$testServerPath = '/var/www/' . strtolower($repository->name) . '/test' . $pullRequestNumber;
 		if (is_dir($testServerPath)) {
 
+			\chdir($testServerPath);
+
 			$dockerComposeFile = \is_readable($testServerPath . '/' . \CI\Builds\CreateTestServer\Consumers\CreateTestServer::DOCKER_COMPOSE_CI_YML);
 			if ($dockerComposeFile) {
 				$this->runProcess('docker-compose -f ' . \CI\Builds\CreateTestServer\Consumers\CreateTestServer::DOCKER_COMPOSE_CI_YML . ' -f docker-compose.override.yml down');
