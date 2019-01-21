@@ -32,7 +32,7 @@ final class RemoveBuild
 
 			$dockerComposeFile = \is_readable($testServerPath . '/' . \CI\Builds\CreateTestServer\Consumers\CreateTestServer::DOCKER_COMPOSE_CI_YML);
 			if ($dockerComposeFile) {
-				$this->runProcess('docker-compose down -f ' . $dockerComposeFile);
+				$this->runProcess('docker-compose -f ' . $dockerComposeFile . ' -f docker-compose.override.yml down');
 			}
 
 			$this->logger->addInfo('Proběhne smazání adresáře ' . $testServerPath);
