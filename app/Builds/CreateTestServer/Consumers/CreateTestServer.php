@@ -6,6 +6,7 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 {
 
 	public const DOCKER_COMPOSE_CI_YML = 'docker-compose.ci.yml';
+	public const DOCKER_COMPOSE_OVERRIDE_YML = 'docker-compose.override.yml';
 
 	/**
 	 * @var \Monolog\Logger
@@ -169,10 +170,10 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 				}
 			}
 
-			if (\is_readable(self::DOCKER_COMPOSE_CI_YML)) {
+			if (\is_readable(self::DOCKER_COMPOSE_CI_YML) && \is_readable(self::DOCKER_COMPOSE_OVERRIDE_YML)) {
 				try {
-					$this->processRunner->runProcess($this->logger, $cwd, 'sed "s/testX/test' . $build->pullRequestNumber . '/" < ' . $cwd . '/../docker-compose.override.yml' . ' > ' . $cwd . '/docker-compose.override.yml', $loggingContext);
-					$this->processRunner->runProcess($this->logger, $cwd, 'docker-compose -f ' . self::DOCKER_COMPOSE_CI_YML . ' -f docker-compose.override.yml up -d', $loggingContext);
+					$this->processRunner->runProcess($this->logger, $cwd, 'sed "s/testX/test' . $build->pullRequestNumber . '/" < ' . $cwd . '/../' . self::DOCKER_COMPOSE_OVERRIDE_YML . ' > ' . $cwd . '/' . self::DOCKER_COMPOSE_OVERRIDE_YML, $loggingContext);
+					$this->processRunner->runProcess($this->logger, $cwd, 'docker-compose -f ' . self::DOCKER_COMPOSE_CI_YML . ' -f ' . self::DOCKER_COMPOSE_OVERRIDE_YML . ' up -d', $loggingContext);
 				} catch (\Symfony\Component\Process\Exception\RuntimeException $e) {
 					$this->logger->addWarning($e, $loggingContext);
 					$success = FALSE;

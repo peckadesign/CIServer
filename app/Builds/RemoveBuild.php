@@ -33,8 +33,9 @@ final class RemoveBuild
 			\chdir($testServerPath);
 
 			$dockerComposeFile = \is_readable($testServerPath . '/' . \CI\Builds\CreateTestServer\Consumers\CreateTestServer::DOCKER_COMPOSE_CI_YML);
-			if ($dockerComposeFile) {
-				$this->runProcess('docker-compose -f ' . \CI\Builds\CreateTestServer\Consumers\CreateTestServer::DOCKER_COMPOSE_CI_YML . ' -f docker-compose.override.yml down');
+			$dockerComposeOverrideFile = \is_readable($testServerPath . '/' . \CI\Builds\CreateTestServer\Consumers\CreateTestServer::DOCKER_COMPOSE_OVERRIDE_YML);
+			if ($dockerComposeFile && $dockerComposeOverrideFile) {
+				$this->runProcess('docker-compose -f ' . \CI\Builds\CreateTestServer\Consumers\CreateTestServer::DOCKER_COMPOSE_CI_YML . ' -f ' . \CI\Builds\CreateTestServer\Consumers\CreateTestServer::DOCKER_COMPOSE_OVERRIDE_YML . ' down');
 			}
 
 			$this->logger->addInfo('Proběhne smazání adresáře ' . $testServerPath);
