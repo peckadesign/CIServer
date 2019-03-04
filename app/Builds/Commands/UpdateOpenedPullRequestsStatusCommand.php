@@ -57,7 +57,14 @@ final class UpdateOpenedPullRequestsStatusCommand extends \Symfony\Component\Con
 		];
 		$builds = $this->createTestServersRepository->findBy($conditions);
 		$this->gitHub->setAccessToken($systemUser->gitHubToken);
+
+		$progress = NULL;
+		if ($output->isVerbose()) {
+			$progress = new \Symfony\Component\Console\Helper\ProgressBar($output, \count($builds));
+		}
+
 		foreach ($builds as $build) {
+			$progress && $progress->advance();
 			$pullRequest = $this->gitHub->api('/repos/peckadesign/' . $build->repository->name . '/pulls/' . $build->pullRequestNumber);
 			if ($pullRequest['state'] === 'open') {
 				continue;
@@ -65,6 +72,8 @@ final class UpdateOpenedPullRequestsStatusCommand extends \Symfony\Component\Con
 			$build->closed = TRUE;
 			$this->createTestServersRepository->persist($build);
 		}
+		$progress && $progress->finish();
+		$progress && $output->writeln('');
 		$this->createTestServersRepository->flush();
 
 		return 0;
