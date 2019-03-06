@@ -42,11 +42,6 @@ final class ClosedPullRequest implements \Kdyby\RabbitMq\IConsumer
 			return self::MSG_REJECT;
 		}
 
-		$deleted = $this->removeBuild->remove($hook->repository, $hook->pullRequestNumber);
-		if ( ! $deleted) {
-			return self::MSG_REJECT_REQUEUE;
-		}
-
 		$conditions = [
 			'repository' => $hook->repository,
 			'pullRequestNumber' => $hook->pullRequestNumber,
