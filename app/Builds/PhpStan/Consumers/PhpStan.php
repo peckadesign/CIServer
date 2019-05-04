@@ -21,11 +21,6 @@ class PhpStan implements \Kdyby\RabbitMq\IConsumer
 	private $logDirectory;
 
 	/**
-	 * @var \CI\Orm\Orm
-	 */
-	private $orm;
-
-	/**
 	 * @var \CI\Builds\CreateTestServer\CreateTestServersRepository
 	 */
 	private $createTestServersRepository;
@@ -52,14 +47,12 @@ class PhpStan implements \Kdyby\RabbitMq\IConsumer
 		\CI\Builds\PhpStan\StatusPublicator $statusPublicator,
 		\CI\Builds\CreateTestServer\CreateTestServersRepository $createTestServersRepository,
 		\CI\GitHub\RepositoriesRepository $repositoriesRepository,
-		\CI\Orm\Orm $orm,
 		\CI\Builds\CreateTestServer\BuildLocator $buildLocator,
 		\CI\Process\ProcessRunner $processRunner
 	) {
 		$this->logger = $logger;
 		$this->statusPublicator = $statusPublicator;
 		$this->logDirectory = $logDirectory;
-		$this->orm = $orm;
 		$this->createTestServersRepository = $createTestServersRepository;
 		$this->buildLocator = $buildLocator;
 		$this->repositoriesRepository = $repositoriesRepository;
@@ -69,8 +62,6 @@ class PhpStan implements \Kdyby\RabbitMq\IConsumer
 
 	public function process(\PhpAmqpLib\Message\AMQPMessage $message)
 	{
-		$this->orm->clearIdentityMapAndCaches(\CI\Orm\Orm::I_KNOW_WHAT_I_AM_DOING);
-
 		$loggingContext = [];
 
 		try {

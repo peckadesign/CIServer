@@ -24,7 +24,7 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 	private $statusPublicator;
 
 	/**
-	 * @var \Kdyby\Github\Client
+	 * @var \League\OAuth2\Client\Provider\Github
 	 */
 	private $gitHub;
 
@@ -32,11 +32,6 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 	 * @var \CI\User\UsersRepository
 	 */
 	private $usersRepository;
-
-	/**
-	 * @var \CI\Orm\Orm
-	 */
-	private $orm;
 
 	/**
 	 * @var array|\CI\Builds\IOnBuildReady
@@ -63,9 +58,8 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 		\Monolog\Logger $logger,
 		\CI\Builds\CreateTestServer\CreateTestServersRepository $createTestServersRepository,
 		\CI\Builds\CreateTestServer\StatusPublicator $statusPublicator,
-		\Kdyby\Github\Client $gitHub,
+		\League\OAuth2\Client\Provider\Github $gitHub,
 		\CI\User\UsersRepository $usersRepository,
-		\CI\Orm\Orm $orm,
 		\CI\Builds\CreateTestServer\BuildLocator $buildLocator,
 		\Kdyby\Clock\IDateTimeProvider $dateTimeProvider,
 		\CI\Process\ProcessRunner $processRunner
@@ -75,7 +69,6 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 		$this->statusPublicator = $statusPublicator;
 		$this->gitHub = $gitHub;
 		$this->usersRepository = $usersRepository;
-		$this->orm = $orm;
 		$this->buildLocator = $buildLocator;
 		$this->dateTimeProvider = $dateTimeProvider;
 		$this->processRunner = $processRunner;
@@ -90,8 +83,6 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 
 	public function process(\PhpAmqpLib\Message\AMQPMessage $message)
 	{
-		$this->orm->clearIdentityMapAndCaches(\CI\Orm\Orm::I_KNOW_WHAT_I_AM_DOING);
-
 		$loggingContext = [];
 
 		$this->logger->addDebug(sprintf('Přijatá data jsou: %s', $message->getBody()), $loggingContext);
@@ -116,14 +107,14 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 
 		$databaseFiles = [];
 		try {
-			$this->gitHub->setAccessToken($systemUser->gitHubToken);
-			$pullRequestFiles = $this->gitHub->api('/repos/peckadesign/' . $build->repository->name . '/pulls/' . $build->pullRequestNumber . '/files');
+			$pullRequestFilesRequest = $this->gitHub->getAuthenticatedRequest('GET', $this->gitHub->apiDomain . '/repos/peckadesign/' . $build->repository->name . '/pulls/' . $build->pullRequestNumber . '/files', $systemUser->gitHubToken);
+			$pullRequestFiles = $this->gitHub->getParsedResponse($pullRequestFilesRequest);
 			foreach ($pullRequestFiles as $pullRequestFile) {
 				if (strpos($pullRequestFile->filename, '.sql') !== FALSE) {
 					$databaseFiles[] = $pullRequestFile->filename;
 				}
 			}
-		} catch (\Kdyby\Github\ApiException $e) {
+		} catch (\Throwable $e) {
 			$this->logger->addWarning($e->getMessage());
 		}
 

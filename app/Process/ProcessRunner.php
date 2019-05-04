@@ -21,7 +21,7 @@ class ProcessRunner
 			throw $e;
 		}
 
-		$process = new \Symfony\Component\Process\Process($cmd, $cwd, NULL, NULL, NULL);
+		$process = \Symfony\Component\Process\Process::fromShellCommandline($cmd, $cwd, NULL, NULL, NULL);
 		try {
 			$cb = function (string $type, string $buffer) use ($logger, $loggingContext) {
 				if ($type === \Symfony\Component\Process\Process::ERR) {

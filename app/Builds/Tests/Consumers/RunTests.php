@@ -31,11 +31,6 @@ class RunTests implements \Kdyby\RabbitMq\IConsumer
 	private $repositoriesRepository;
 
 	/**
-	 * @var \CI\Orm\Orm
-	 */
-	private $orm;
-
-	/**
 	 * @var \CI\Builds\CreateTestServer\CreateTestServersRepository
 	 */
 	private $createTestServersRepository;
@@ -64,7 +59,6 @@ class RunTests implements \Kdyby\RabbitMq\IConsumer
 		\CI\Builds\Tests\StatusPublicator $statusPublicator,
 		\CI\GitHub\RepositoriesRepository $repositoriesRepository,
 		\CI\Builds\CreateTestServer\CreateTestServersRepository $createTestServersRepository,
-		\CI\Orm\Orm $orm,
 		\CI\Builds\CreateTestServer\BuildLocator $buildLocator,
 		\CI\Process\ProcessRunner $processRunner
 	) {
@@ -75,7 +69,6 @@ class RunTests implements \Kdyby\RabbitMq\IConsumer
 		$this->statusPublicator = $statusPublicator;
 		$this->repositoriesRepository = $repositoriesRepository;
 		$this->createTestServersRepository = $createTestServersRepository;
-		$this->orm = $orm;
 		$this->buildLocator = $buildLocator;
 		$this->processRunner = $processRunner;
 	}
@@ -83,8 +76,6 @@ class RunTests implements \Kdyby\RabbitMq\IConsumer
 
 	public function process(\PhpAmqpLib\Message\AMQPMessage $message)
 	{
-		$this->orm->clearIdentityMapAndCaches(\CI\Orm\Orm::I_KNOW_WHAT_I_AM_DOING);
-
 		$loggingContext = [];
 
 		try {

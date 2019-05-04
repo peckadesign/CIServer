@@ -2,11 +2,10 @@
 
 namespace CI\Utils;
 
-use Nette;
-
-
-class Helpers extends Nette\Object
+final class Helpers
 {
+
+	use \Nette\StaticClass;
 
 	public static function dateTime($s)
 	{
