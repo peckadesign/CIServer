@@ -59,9 +59,6 @@ class PullRequestProcessor
 		} elseif (isset($hookJson['pull_request']) && $hookJson['action'] === 'closed') {
 			$hook = new ClosedPullRequest();
 			$producer = $this->closedPullRequestProducer;
-		} elseif (isset($hookJson['pull_request']) && $hookJson['action'] === 'closed') {
-			$hook = new ClosedPullRequest();
-			$producer = $this->closedPullRequestProducer;
 		} else {
 			throw new UnKnownHookException();
 		}
