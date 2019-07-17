@@ -26,11 +26,6 @@ class SynchronizedPullRequest implements \Kdyby\RabbitMq\IConsumer
 	private $createTestServerProducer;
 
 	/**
-	 * @var \CI\Orm\Orm
-	 */
-	private $orm;
-
-	/**
 	 * @var \Kdyby\RabbitMq\IProducer
 	 */
 	private $pushProducer;
@@ -41,22 +36,18 @@ class SynchronizedPullRequest implements \Kdyby\RabbitMq\IConsumer
 		\Kdyby\RabbitMq\IProducer $pushProducer,
 		\CI\Hooks\PullRequestsRepository $pullRequestsRepository,
 		\CI\Builds\CreateTestServer\CreateTestServersRepository $createTestServersRepository,
-		\CI\Builds\CreateTestServer\StatusPublicator $statusPublicator,
-		\CI\Orm\Orm $orm
+		\CI\Builds\CreateTestServer\StatusPublicator $statusPublicator
 	) {
 		$this->createTestServerProducer = $createTestServerProducer;
 		$this->statusPublicator = $statusPublicator;
 		$this->createTestServersRepository = $createTestServersRepository;
 		$this->pullRequestsRepository = $pullRequestsRepository;
-		$this->orm = $orm;
 		$this->pushProducer = $pushProducer;
 	}
 
 
 	public function process(\PhpAmqpLib\Message\AMQPMessage $message)
 	{
-		$this->orm->clearIdentityMapAndCaches(\CI\Orm\Orm::I_KNOW_WHAT_I_AM_DOING);
-
 		$hookId = (int) $message->getBody();
 		$hook = $this->pullRequestsRepository->getById($hookId);
 

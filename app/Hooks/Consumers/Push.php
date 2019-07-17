@@ -11,11 +11,6 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 	private $logger;
 
 	/**
-	 * @var \CI\Orm\Orm
-	 */
-	private $orm;
-
-	/**
 	 * @var array|\CI\Builds\IOnBuildReady
 	 */
 	private $onBuildReady = [];
@@ -48,7 +43,6 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 
 	public function __construct(
 		\Monolog\Logger $logger,
-		\CI\Orm\Orm $orm,
 		\CI\Builds\CreateTestServer\CreateTestServersRepository $createTestServersRepository,
 		\CI\GitHub\RepositoriesRepository $repositoriesRepository,
 		\CI\Process\ProcessRunner $processRunner,
@@ -56,7 +50,6 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 		\CI\Builds\CreateTestServer\StatusPublicator $statusPublicator
 	) {
 		$this->logger = $logger;
-		$this->orm = $orm;
 		$this->createTestServersRepository = $createTestServersRepository;
 		$this->repositoriesRepository = $repositoriesRepository;
 		$this->processRunner = $processRunner;
@@ -73,8 +66,6 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 
 	public function process(\PhpAmqpLib\Message\AMQPMessage $message)
 	{
-		$this->orm->clearIdentityMapAndCaches(\CI\Orm\Orm::I_KNOW_WHAT_I_AM_DOING);
-
 		$loggingContext = [];
 
 		try {
@@ -204,7 +195,7 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 						$currentBranch = $this->processRunner->runProcess($this->logger, $cwd, 'git symbolic-ref --short HEAD', $loggingContext);
 						$this->logger->addInfo('Větev instance je "' . $currentBranch . '"', $loggingContext);
 					} catch (\Exception $e) {
-						throw new \Exception('Nepodařilo na získat název aktuální větve', $e->getCode(), $e);
+						throw new \Exception('Nepodařilo na získat název aktuální větve: ' . $e->getMessage(), $e->getCode(), $e);
 					}
 
 					if ($branchName !== $currentBranch) {

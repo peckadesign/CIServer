@@ -9,12 +9,12 @@ namespace CI\Builds\CreateTestServer;
  * @property string|NULL $commit
  * @property int|NULL $succeeded
  * @property int|NULL $failed
- * @property \DateTime|NULL $start
- * @property \DateTime|NULL $finish
+ * @property \DateTimeImmutable|NULL $start
+ * @property \DateTimeImmutable|NULL $finish
  * @property bool $success {default FALSE}
  * @property bool $closed {default FALSE}
- * @property \DateTime|NULL $updateStart
- * @property \DateTime|NULL $updateFinish
+ * @property \DateTimeImmutable|NULL $updateStart
+ * @property \DateTimeImmutable|NULL $updateFinish
  * @property \CI\GitHub\Repository $repository {m:1 \CI\GitHub\Repository::$createTestServer}
  */
 class CreateTestServer extends \Nextras\Orm\Entity\Entity implements

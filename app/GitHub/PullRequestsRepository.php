@@ -8,7 +8,7 @@ use Nextras;
 class PullRequestsRepository extends Nextras\Orm\Repository\Repository
 {
 
-	public static function getEntityClassNames()
+	public static function getEntityClassNames(): array
 	{
 		return [
 			PullRequest::class,

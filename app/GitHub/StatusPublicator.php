@@ -10,7 +10,7 @@ class StatusPublicator
 	const STATUS_FAILURE = 'failure';
 
 	/**
-	 * @var \Kdyby\Github\Client
+	 * @var \League\OAuth2\Client\Provider\Github
 	 */
 	private $gitHubClient;
 
@@ -26,7 +26,7 @@ class StatusPublicator
 
 
 	public function __construct(
-		\Kdyby\Github\Client $gitHubClient,
+		\League\OAuth2\Client\Provider\Github $gitHubClient,
 		\CI\User\UsersRepository $usersRepository,
 		\Monolog\Logger $logger
 	) {
@@ -67,19 +67,15 @@ class StatusPublicator
 			sprintf('Pro commit %s je nastavován status "%s" a odkaz "%s"', $commit, $body['description'], $link)
 		);
 
-		$this->gitHubClient->setAccessToken($systemUser->gitHubToken);
-
 		try {
-			$return = $this->gitHubClient->post(
-				'/repos/peckadesign/' . $repository->name . '/statuses/' . $commit,
-				[],
-				\Nette\Utils\Json::encode($body),
-				['Content-Type' => 'application/json']
+			$request = $this->gitHubClient->getAuthenticatedRequest(
+				'POST',
+				$this->gitHubClient->apiDomain . '/repos/peckadesign/' . $repository->name . '/statuses/' . $commit,
+				$systemUser->gitHubToken,
+				['headers' => [['Content-Type' => 'application/json']], 'body' => \Nette\Utils\Json::encode($body)]
 			);
-			$this->logger->addInfo(
-				sprintf('Pro commit %s byl nastaven status, odpověď je %s', $commit, print_r($return, TRUE))
-			);
-		} catch (\Kdyby\Github\ApiException $e) {
+			$this->gitHubClient->getParsedResponse($request);
+		} catch (\Throwable $e) {
 			$this->logger->addError($e->getMessage());
 		}
 	}

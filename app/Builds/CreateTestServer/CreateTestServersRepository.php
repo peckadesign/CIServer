@@ -10,7 +10,7 @@ namespace CI\Builds\CreateTestServer;
 class CreateTestServersRepository extends \Nextras\Orm\Repository\Repository
 {
 
-	public static function getEntityClassNames()
+	public static function getEntityClassNames(): array
 	{
 		return [
 			CreateTestServer::class,

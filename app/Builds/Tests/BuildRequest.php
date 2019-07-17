@@ -8,8 +8,8 @@ namespace CI\Builds\Tests;
  * @property string $branchName
  * @property int|NULL $succeeded
  * @property int|NULL $failed
- * @property \DateTime|NULL $start
- * @property \DateTime|NULL $finish
+ * @property \DateTimeImmutable|NULL $start
+ * @property \DateTimeImmutable|NULL $finish
  * @property \CI\GitHub\Repository $repository {m:1 \CI\GitHub\Repository::$buildRequests}
  */
 class BuildRequest extends \Nextras\Orm\Entity\Entity implements

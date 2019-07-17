@@ -5,7 +5,7 @@ namespace CI\Hooks;
 class PullRequestsMapper extends \Nextras\Orm\Mapper\Mapper
 {
 
-	public function getTableName()
+	public function getTableName(): string
 	{
 		return 'pull_requests_hooks';
 	}

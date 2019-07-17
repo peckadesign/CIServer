@@ -11,7 +11,7 @@ final class UpdateOpenedPullRequestsStatusCommand extends \Symfony\Component\Con
 	private $createTestServersRepository;
 
 	/**
-	 * @var \Kdyby\Github\Client
+	 * @var \League\OAuth2\Client\Provider\Github
 	 */
 	private $gitHub;
 
@@ -22,7 +22,7 @@ final class UpdateOpenedPullRequestsStatusCommand extends \Symfony\Component\Con
 
 
 	public function __construct(
-		\Kdyby\Github\Client $gitHub,
+		\League\OAuth2\Client\Provider\Github $gitHub,
 		\CI\User\UsersRepository $usersRepository,
 		\CI\Builds\CreateTestServer\CreateTestServersRepository $createTestServersRepository
 	) {
@@ -56,7 +56,6 @@ final class UpdateOpenedPullRequestsStatusCommand extends \Symfony\Component\Con
 			'closed' => FALSE,
 		];
 		$builds = $this->createTestServersRepository->findBy($conditions);
-		$this->gitHub->setAccessToken($systemUser->gitHubToken);
 
 		$progress = NULL;
 		if ($output->isVerbose()) {
@@ -65,7 +64,8 @@ final class UpdateOpenedPullRequestsStatusCommand extends \Symfony\Component\Con
 
 		foreach ($builds as $build) {
 			$progress && $progress->advance();
-			$pullRequest = $this->gitHub->api('/repos/peckadesign/' . $build->repository->name . '/pulls/' . $build->pullRequestNumber);
+			$pullRequestRequest = $this->gitHub->getAuthenticatedRequest('GET', $this->gitHub->apiDomain . '/repos/peckadesign/' . $build->repository->name . '/pulls/' . $build->pullRequestNumber, $systemUser->gitHubToken);
+			$pullRequest = $this->gitHub->getParsedResponse($pullRequestRequest);
 			if ($pullRequest['state'] === 'open') {
 				continue;
 			}

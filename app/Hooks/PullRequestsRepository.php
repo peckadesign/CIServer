@@ -8,7 +8,7 @@ namespace CI\Hooks;
 class PullRequestsRepository extends \Nextras\Orm\Repository\Repository
 {
 
-	public static function getEntityClassNames()
+	public static function getEntityClassNames(): array
 	{
 		return [
 			PullRequest::class,
@@ -19,7 +19,7 @@ class PullRequestsRepository extends \Nextras\Orm\Repository\Repository
 	}
 
 
-	public function getEntityClassName(array $data)
+	public function getEntityClassName(array $data): string
 	{
 		if ( ! isset($data['type'])) {
 			return parent::getEntityClassName($data);

@@ -6,11 +6,6 @@ final class LoginPresenter extends \Nette\Application\UI\Presenter
 {
 
 	/**
-	 * @var \Kdyby\Github\Client
-	 */
-	private $github;
-
-	/**
 	 * @var string
 	 * @persistent
 	 */
@@ -38,14 +33,12 @@ final class LoginPresenter extends \Nette\Application\UI\Presenter
 
 
 	public function __construct(
-		\Kdyby\Github\Client $gitHub,
 		\CI\User\UsersRepository $users,
 		\CI\OAuth2Login\PeckaNotesProvider $authProvider,
 		\CI\OAuth2Login\StateStorage $stateStorage,
 		\CI\OAuth2Login\Login\BackLinkStorage $backLinkStorage
 	) {
 		parent::__construct();
-		$this->github = $gitHub;
 		$this->users = $users;
 		$this->authProvider = $authProvider;
 		$this->stateStorage = $stateStorage;

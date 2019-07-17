@@ -4,7 +4,6 @@ extensions:
 	orm: Nextras\Orm\Bridges\NetteDI\OrmExtension
 	migrations: Nextras\Migrations\Bridges\NetteDI\MigrationsExtension
 	console: Kdyby\Console\DI\ConsoleExtension
-	github: Kdyby\Github\DI\GithubExtension
 	ci.monolog: CI\Monolog\DI\Extension
 	rabbitmq: Kdyby\RabbitMq\DI\RabbitMqExtension
 
@@ -27,14 +26,6 @@ migrations:
 	dbal: nextras
 
 
-github:
-	permissions:
-		- user:email
-		- repo:status
-		- repo
-		- public_repo
-
-
 ci.monolog:
 	allowedTypes:
 		 - CI\DashBoard\Presenters\BasePresenter
@@ -50,6 +41,12 @@ monolog:
 parameters:
 	binDir: %appDir%/bin
 	logDir: %appDir%/../log
+	github:
+		scope:
+			- user:email
+			- repo:status
+			- repo
+			- public_repo
 
 
 application:
@@ -298,13 +295,9 @@ services:
 		arguments:
 			outputDirectory: %logDir%/phpstan/outputs
 
-
-	ciHelpers:
-		class: CI\Utils\Helpers
-
 	nette.latteFactory:
 		setup:
-			- addFilter('dateTime', [@CI\Utils\Helpers, dateTime])
+			- addFilter('dateTime', [CI\Utils\Helpers, dateTime])
 
 	-
 		class: CI\Monolog\Handlers\CommitLogLocator
@@ -330,3 +323,7 @@ services:
 	-
 		class: CI\Builds\Commands\UpdateOpenedPullRequestsStatusCommand
 		tags: [kdyby.console.command]
+
+	-
+		class: \League\OAuth2\Client\Provider\Github
+		factory: \CI\GitHub\ProviderFactory(%github.clientId%, %github.clientSecret%, %github.scope%)::create()

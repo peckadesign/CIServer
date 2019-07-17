@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-apt-get install -y --force-yes \
+yes | apt-get install \
 	apt-transport-https \
 	lsb-release \
 	ca-certificates
@@ -8,36 +8,25 @@ apt-get install -y --force-yes \
 wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
 echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/sury.list
 
-apt-get install software-properties-common
-apt-key adv --recv-keys --keyserver hkp://keyserver.ubuntu.com:80 0xcbcb082a1bb943db
-add-apt-repository 'deb [arch=amd64,i386,ppc64el] http://mirror.vpsfree.cz/mariadb/repo/5.5/ubuntu trusty main'
-
-export DEBIAN_FRONTEND=noninteractive
-debconf-set-selections <<< 'mariadb-server-5.5 mysql-server/root_password password ci'
-debconf-set-selections <<< 'mariadb-server-5.5 mysql-server/root_password_again password ci'
-
-echo "deb http://www.rabbitmq.com/debian/ testing main" > /etc/apt/sources.list.d/rabbitmq.list
-wget https://www.rabbitmq.com/rabbitmq-signing-key-public.asc -q -O - | apt-key add -
-
 apt-get update
 
-apt-get upgrade -y --force-yes
-apt-get install -y --force-yes \
+yes | apt-get upgrade
+yes | apt-get install \
 	git \
 	htop \
 	vim \
-	mariadb-server \
-	rabbitmq-server \
+	unzip \
 	apache2 \
-	php7.1 \
-	libapache2-mod-php7.1 \
-	php7.1-xdebug \
-	php7.1-curl \
-	php7.1-xml \
-	php7.1-zip \
-	php7.1-mysql \
-	php7.1-mbstring \
-	php7.1-bcmath
+	php7.3 \
+	libapache2-mod-php7.3 \
+	php7.3-xdebug \
+	php7.3-curl \
+	php7.3-xml \
+	php7.3-zip \
+	php7.3-mysql \
+	php7.3-mbstring \
+	php7.3-xdebug \
+	php7.3-bcmath
 
 a2enmod rewrite
 
@@ -64,29 +53,19 @@ if ! [ -L "/etc/apache2/conf-available/ci.conf" ]; then
 fi
 a2enconf -q ci.conf
 
-if ! [ -L "/etc/php/7.1/cli/conf.d/ci.ini" ]; then
-	rm -f "/etc/php/7.1/cli/conf.d/ci.ini"
-	ln -s "/vagrant/vagrant/server/php/cli.ini" "/etc/php/7.1/cli/conf.d/ci.ini"
+if ! [ -L "/etc/php/7.3/cli/conf.d/ci.ini" ]; then
+	rm -f "/etc/php/7.3/cli/conf.d/ci.ini"
+	ln -s "/vagrant/vagrant/server/php/cli.ini" "/etc/php/7.3/cli/conf.d/ci.ini"
 fi
 
-if ! [ -L "/etc/php/7.1/apache2/conf.d/ci.ini" ]; then
-	rm -f "/etc/php/7.1/apache2/conf.d/ci.ini"
-	ln -s "/vagrant/vagrant/server/php/apache2.ini" "/etc/php/7.1/apache2/conf.d/ci.ini"
+if ! [ -L "/etc/php/7.3/apache2/conf.d/ci.ini" ]; then
+	rm -f "/etc/php/7.3/apache2/conf.d/ci.ini"
+	ln -s "/vagrant/vagrant/server/php/apache2.ini" "/etc/php/7.3/apache2/conf.d/ci.ini"
 fi
 
-if [ -f "/etc/php/7.1/mods-available/xdebug.ini" ]; then
-	rm -f "/etc/php/7.1/mods-available/xdebug.ini"
-	ln -s "/vagrant/vagrant/server/php/xdebug.ini" "/etc/php/7.1/mods-available/xdebug.ini"
+if [ -f "/etc/php/7.3/mods-available/xdebug.ini" ]; then
+	rm -f "/etc/php/7.3/mods-available/xdebug.ini"
+	ln -s "/vagrant/vagrant/server/php/xdebug.ini" "/etc/php/7.3/mods-available/xdebug.ini"
 fi
 
 chmod -R 0777 "/vagrant/temp" "/vagrant/log"
-
-
-mysql --user=root --password="ci" --execute="CREATE DATABASE IF NOT EXISTS ci";
-mysql --user=root --password="ci" --execute="GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY 'ci';"
-sed -ie "s/^bind-address/#bind-address/g" "/etc/mysql/my.cnf"
-service mysql restart
-
-
-rabbitmq-plugins enable rabbitmq_management
-echo "[{rabbit, [{loopback_users, []}]}]." > /etc/rabbitmq/rabbitmq.config

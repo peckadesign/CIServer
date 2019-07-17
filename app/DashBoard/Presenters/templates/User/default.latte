@@ -6,6 +6,6 @@
 
 	<ul>
 		{foreach $users as $editedUser}
-			<li>{$editedUser->gitHubName} <a n:href="setAsSystemUser! $editedUser->getId()" class="btn btn-warning" n:if=" ! $editedUser->systemUser">Nastavit jako systémového</a><span class="btn btn-success" n:if="$editedUser->systemUser">Systémový uživatel</span> <a href="{plink gitHubLogin-open!}" class="btn btn-warning" n:if="$editedUser->getId() === $user->getId()">Spárovat s GitHubem</a></li>
+			<li>{$editedUser->gitHubName} <a n:href="setAsSystemUser! $editedUser->getId()" class="btn btn-warning" n:if=" ! $editedUser->systemUser">Nastavit jako systémového</a><span class="btn btn-success" n:if="$editedUser->systemUser">Systémový uživatel</span> <a href="{plink gitHub!}" class="btn btn-warning" n:if="$editedUser->getId() === $user->getId()">Spárovat s GitHubem</a></li>
 		{/foreach}
 	</ul>

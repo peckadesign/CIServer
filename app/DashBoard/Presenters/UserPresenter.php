@@ -14,14 +14,20 @@ class UserPresenter extends BasePresenter
 	private $usersRepository;
 
 	/**
-	 * @var Kdyby\Github\Client
+	 * @var \League\OAuth2\Client\Provider\Github
 	 */
 	private $gitHub;
+
+	/**
+	 * @var string
+	 * @persistent
+	 */
+	public $backLink;
 
 
 	public function __construct(
 		CI\User\UsersRepository $usersRepository,
-		\Kdyby\Github\Client $gitHub
+		\League\OAuth2\Client\Provider\Github $gitHub
 	) {
 		parent::__construct();
 
@@ -48,39 +54,12 @@ class UserPresenter extends BasePresenter
 	}
 
 
-	protected function createComponentGitHubLogin() : \Kdyby\Github\UI\LoginDialog
+	public function handleGitHub(): void
 	{
-		$dialog = new Kdyby\Github\UI\LoginDialog($this->gitHub);
-
-		$dialog->onResponse[] = function (Kdyby\Github\UI\LoginDialog $dialog) {
-			/** @var Kdyby\Github\Client $gitHub */
-			$gitHub = $dialog->getClient();
-
-			if ( ! $gitHub->getUser()) {
-				$this->flashMessage("Sorry bro, github authentication failed.");
-
-				return;
-			}
-
-			try {
-				$me = $gitHub->api('/user');
-
-				$user = $this->usersRepository->getById($this->getUser()->getId());
-				$user->gitHubId = $me['id'];
-				$user->gitHubToken = $gitHub->getAccessToken();
-				$this->usersRepository->persistAndFlush($user);
-
-				$this->getUser()->login($user);
-			} catch (Kdyby\Github\ApiException $e) {
-
-				\Tracy\Debugger::log($e, 'github');
-				$this->flashMessage("Sorry bro, github authentication failed hard.");
-			}
-
-			$this->redirect('this');
-		};
-
-		return $dialog;
+		if ($this->user->isLoggedIn()) {
+			$authUrl = $this->gitHub->getAuthorizationUrl(['state' => $this->storeRequest()]);
+			$this->redirectUrl($authUrl);
+		}
 	}
 
 }
