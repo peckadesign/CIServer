@@ -78,8 +78,8 @@ final class RemoveBuild
 
 	private function runProcess(string $cmd)
 	{
-		$process = \Symfony\Component\Process\Process::fromShellCommandline($cmd, $this->binDir, NULL, NULL, NULL);
 		try {
+			$process = \Symfony\Component\Process\Process::fromShellCommandline($cmd, $this->binDir, NULL, NULL, NULL);
 			$cb = function (string $type, string $buffer) {
 				if ($type === \Symfony\Component\Process\Process::ERR) {
 					$this->logger->addError($buffer);
