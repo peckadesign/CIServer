@@ -32,10 +32,10 @@ final class RemoveBuild
 
 			\chdir($testServerPath);
 
-			$dockerComposeFile = \is_readable($testServerPath . '/' . \CI\Builds\CreateTestServer\Consumers\CreateTestServer::DOCKER_COMPOSE_CI_YML);
+			$dockerComposeFile = \is_readable($testServerPath . '/' . \CI\Builds\CreateTestServer\Consumers\CreateTestServer::DOCKER_COMPOSE_TEST_YML);
 			$dockerComposeOverrideFile = \is_readable($testServerPath . '/' . \CI\Builds\CreateTestServer\Consumers\CreateTestServer::DOCKER_COMPOSE_OVERRIDE_YML);
 			if ($dockerComposeFile && $dockerComposeOverrideFile) {
-				$this->runProcess('docker-compose -f ' . \CI\Builds\CreateTestServer\Consumers\CreateTestServer::DOCKER_COMPOSE_CI_YML . ' -f ' . \CI\Builds\CreateTestServer\Consumers\CreateTestServer::DOCKER_COMPOSE_OVERRIDE_YML . ' down');
+				$this->runProcess('docker-compose -f ' . \CI\Builds\CreateTestServer\Consumers\CreateTestServer::DOCKER_COMPOSE_TEST_YML . ' -f ' . \CI\Builds\CreateTestServer\Consumers\CreateTestServer::DOCKER_COMPOSE_OVERRIDE_YML . ' down');
 			}
 
 			$this->logger->addInfo('Proběhne smazání adresáře ' . $testServerPath);
@@ -79,6 +79,7 @@ final class RemoveBuild
 	private function runProcess(string $cmd)
 	{
 		try {
+			echo $this->binDir;
 			$process = \Symfony\Component\Process\Process::fromShellCommandline($cmd, $this->binDir, NULL, NULL, NULL);
 			$cb = function (string $type, string $buffer) {
 				if ($type === \Symfony\Component\Process\Process::ERR) {
