@@ -192,7 +192,7 @@ services:
 			- addOnBuildReady(@CI\Builds\PhpCs\PublishPhpCs)
 			- addOnBuildReady(@CI\Builds\Tests\PublishTests)
 			- addOnBuildReady(@CI\Builds\PhpStan\PublishPhpStan)
-			- addOnBuildReady(@CI\Builds\Cypress\PublishCypress)
+			- addOnBuildFrontReady(@CI\Builds\Cypress\PublishCypress)
 
 	-
 		class: CI\Builds\Tests\WorkspaceLocator

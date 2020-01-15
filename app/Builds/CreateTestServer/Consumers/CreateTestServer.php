@@ -39,6 +39,11 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 	private $onBuildReady = [];
 
 	/**
+	 * @var array|\CI\Builds\IOnBuildReady
+	 */
+	private $onBuildFrontReady = [];
+
+	/**
 	 * @var \CI\Builds\CreateTestServer\BuildLocator
 	 */
 	private $buildLocator;
@@ -78,6 +83,11 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 	public function addOnBuildReady(\CI\Builds\IOnBuildReady $onBuildReady)
 	{
 		$this->onBuildReady[] = $onBuildReady;
+	}
+
+	public function addOnBuildFrontReady(\CI\Builds\IOnBuildReady $onBuildFrontReady)
+	{
+		$this->onBuildFrontReady[] = $onBuildFrontReady;
 	}
 
 
@@ -180,14 +190,7 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 				}
 			}
 
-			/** @var \CI\Builds\IOnBuildReady $onBuildReady */
-			foreach ($this->onBuildReady as $onBuildReady) {
-				try {
-					$onBuildReady->buildReady($this->logger, $build->repository, $build, $currentCommit);
-				} catch (\Throwable $e) {
-					$this->logger->addWarning($e);
-				}
-			}
+			$this->dispatchOnBuildReady($build, $currentCommit);
 
 			if (is_readable('Makefile') && ($content = file_get_contents('Makefile')) && strpos($content, 'build-staging-front:') !== FALSE) {
 				try {
@@ -197,6 +200,8 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 					$success = FALSE;
 				}
 			}
+
+			$this->dispatchOnBuildFrontReady($build, $currentCommit);
 
 			$this->logger->addInfo('Vytvoření testovacího serveru "' . $cwd . '" dokončeno', $loggingContext);
 
@@ -211,6 +216,37 @@ class CreateTestServer implements \Kdyby\RabbitMq\IConsumer
 		$this->statusPublicator->publish($build);
 
 		return self::MSG_ACK;
+	}
+
+
+	private function dispatchOnBuildReady(
+		\CI\Builds\CreateTestServer\CreateTestServer $build,
+		string $currentCommit
+	): void
+	{
+		/** @var \CI\Builds\IOnBuildReady $onBuildReady */
+		foreach ($this->onBuildReady as $onBuildReady) {
+			try {
+				$onBuildReady->buildReady($this->logger, $build->repository, $build, $currentCommit);
+			} catch (\Throwable $e) {
+				$this->logger->addWarning($e);
+			}
+		}
+	}
+
+	private function dispatchOnBuildFrontReady(
+		\CI\Builds\CreateTestServer\CreateTestServer $build,
+		string $currentCommit
+	): void
+	{
+		/** @var \CI\Builds\IOnBuildReady $onBuildReady */
+		foreach ($this->onBuildFrontReady as $onBuildFrontReady) {
+			try {
+				$onBuildFrontReady->buildReady($this->logger, $build->repository, $build, $currentCommit);
+			} catch (\Throwable $e) {
+				$this->logger->addWarning($e);
+			}
+		}
 	}
 
 }
