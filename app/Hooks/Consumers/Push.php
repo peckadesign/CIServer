@@ -183,6 +183,8 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 				$build->success = TRUE;
 			}
 
+			$isLocked = FALSE;
+
 			foreach ($instances as $instanceDirectory) {
 				try {
 					$this->logger->addInfo(sprintf('Byla nalezena instance "%s"', $instanceDirectory), $loggingContext);
@@ -190,6 +192,13 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 					chdir($instanceDirectory);
 
 					$cwd = sprintf("%s/%s/%s", $repositoryPath, $repositoryName, $instanceDirectory);
+					$lockFile = $cwd . '/push.lock';
+
+					if (\file_exists($lockFile)) {
+						$this->logger->addInfo(sprintf('Instance "%s" se již zpracovává paralelně', $instanceDirectory), $loggingContext);
+						$isLocked = TRUE;
+						break;
+					}
 
 					try {
 						$currentBranch = $this->processRunner->runProcess($this->logger, $cwd, 'git symbolic-ref --short HEAD', $loggingContext);
@@ -245,8 +254,19 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 					}
 					continue;
 				} finally {
+					if (isset($lockFile)) {
+						$this->logger->addInfo(sprintf('Bude odebrán zámek "%s"', $lockFile), $loggingContext);
+						@\unlink($lockFile);
+					}
+
 					chdir('..');
 				}
+			}
+
+			if ($isLocked) {
+				\sleep(5);
+
+				return self::MSG_REJECT_REQUEUE;
 			}
 		} catch (\Exception $e) {
 			$this->logger->addError($e->getMessage(), $loggingContext);
