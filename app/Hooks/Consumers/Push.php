@@ -211,6 +211,8 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 						throw new \CI\Hooks\SkipException('Do změn nepřišla aktuální větev');
 					}
 
+					\file_put_contents($lockFile, '1');
+
 					$this->processRunner->runProcess($this->logger, $cwd, 'git fetch --prune 2>&1', $loggingContext);
 
 					$this->processRunner->runProcess($this->logger, $cwd, 'git reset origin/' . $currentBranch . ' --hard 2>&1', $loggingContext);
@@ -254,7 +256,7 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 					}
 					continue;
 				} finally {
-					if (isset($lockFile)) {
+					if (isset($lockFile) && \is_readable($lockFile)) {
 						$this->logger->addInfo(sprintf('Bude odebrán zámek "%s"', $lockFile), $loggingContext);
 						@\unlink($lockFile);
 					}
