@@ -256,7 +256,7 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 					}
 					continue;
 				} finally {
-					if (isset($lockFile) && \is_readable($lockFile)) {
+					if (isset($lockFile) && \is_readable($lockFile) && ! $isLocked) {
 						$this->logger->addInfo(sprintf('Bude odebrán zámek "%s"', $lockFile), $loggingContext);
 						@\unlink($lockFile);
 					}
