@@ -16,6 +16,11 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 	private $onBuildReady = [];
 
 	/**
+	 * @var array|\CI\Builds\IOnBuildReady
+	 */
+	private $onBuildFrontReady = [];
+
+	/**
 	 * @var \CI\Builds\CreateTestServer\CreateTestServersRepository
 	 */
 	private $createTestServersRepository;
@@ -61,6 +66,12 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 	public function addOnBuildReady(\CI\Builds\IOnBuildReady $onBuildReady)
 	{
 		$this->onBuildReady[] = $onBuildReady;
+	}
+
+
+	public function addOnBuildFrontReady(\CI\Builds\IOnBuildReady $onBuildFrontReady)
+	{
+		$this->onBuildFrontReady[] = $onBuildFrontReady;
 	}
 
 
@@ -240,6 +251,11 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 
 					if (is_readable('Makefile') && ($content = file_get_contents('Makefile')) && strpos($content, 'build-staging-front:') !== FALSE) {
 						$this->processRunner->runProcess($this->logger, $cwd, 'HOME=/home/' . get_current_user() . ' COMPOSE_INTERACTIVE_NO_CLI=1 make build-staging-front', $loggingContext);
+					}
+
+					/** @var \CI\Builds\IOnBuildReady $onBuildReady */
+					foreach ($this->onBuildFrontReady as $onBuildReady) {
+						$onBuildReady->buildReady($this->logger, $repository, $build, $currentCommit);
 					}
 
 					$this->logger->addInfo('Aktualizace instance "' . $instanceDirectory . '" dokončena', $loggingContext);
