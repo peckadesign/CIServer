@@ -88,6 +88,9 @@ rabbitmq:
 		phpStan:
 			exchange: {name: 'phpStan', type: direct}
 			contentType: text/plain
+		cypress:
+			exchange: {name: 'cypress', type: direct}
+			contentType: text/plain
 
 
 	consumers:
@@ -137,6 +140,10 @@ rabbitmq:
 			exchange: {name: 'phpStan', type: direct}
 			queue: {name: 'phpStan'}
 			callback: [@CI\Builds\PhpStan\Consumers\PhpStan, process]
+		cypress:
+			exchange: {name: 'cypress', type: direct}
+			queue: {name: 'cypress'}
+			callback: [@CI\Builds\Cypress\Consumers\Cypress, process]
 
 
 clock:
@@ -185,6 +192,7 @@ services:
 			- addOnBuildReady(@CI\Builds\PhpCs\PublishPhpCs)
 			- addOnBuildReady(@CI\Builds\Tests\PublishTests)
 			- addOnBuildReady(@CI\Builds\PhpStan\PublishPhpStan)
+			- addOnBuildFrontReady(@CI\Builds\Cypress\PublishCypress)
 
 	-
 		class: CI\Builds\Tests\WorkspaceLocator
@@ -200,6 +208,11 @@ services:
 		class: CI\Builds\PhpStan\PublishPhpStan
 		arguments:
 			producer: @Kdyby\RabbitMq\Connection::getProducer('phpStan')
+
+	-
+		class: CI\Builds\Cypress\PublishCypress
+		arguments:
+			producer: @Kdyby\RabbitMq\Connection::getProducer('cypress')
 
 	-
 		class: CI\Builds\Tests\PublishTests
@@ -275,10 +288,19 @@ services:
 			logDirectory: %logDir%/phpstan/outputs
 
 	-
+		class: CI\Builds\Cypress\Consumers\Cypress
+		arguments:
+			logger: @Kdyby\Monolog\Logger::channel('cypress')
+			logDirectory: %logDir%/cypress/outputs
+
+	-
 		class: CI\Builds\PhpCs\StatusPublicator
 
 	-
 		class: CI\Builds\PhpStan\StatusPublicator
+
+	-
+		class: CI\Builds\Cypress\StatusPublicator
 
 	-
 		class: CI\DashBoard\Presenters\PhpCsPresenter
@@ -294,6 +316,11 @@ services:
 		class: CI\DashBoard\Presenters\PhpStanPresenter
 		arguments:
 			outputDirectory: %logDir%/phpstan/outputs
+
+	-
+		class: CI\DashBoard\Presenters\CypressPresenter
+		arguments:
+			outputDirectory: %logDir%/cypress/outputs
 
 	nette.latteFactory:
 		setup:

@@ -1,0 +1,280 @@
+
+====================================================================================================
+
+  (Run Starting)
+
+  ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ Cypress:    3.8.1                                                                              │
+  │ Browser:    Electron 78 (headless)                                                             │
+  │ Specs:      6 found (login/login.ts, orders/order.dpd.bank.ts, orders/order.ppl.card.ts, order │
+  │             s/order.ppl.cod.ts, orders/order.store.cash.ts, registration/registration.ts)      │
+  └────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+────────────────────────────────────────────────────────────────────────────────────────────────────
+
+  Running:  login/login.ts                                                                  (1 of 6)
+
+
+  FN - user authentication
+
+    ✓ User is able to sign in (4477ms)
+
+
+  1 passing (5s)
+
+
+  (Results)
+
+  ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ Tests:        1                                                                                │
+  │ Passing:      1                                                                                │
+  │ Failing:      0                                                                                │
+  │ Pending:      0                                                                                │
+  │ Skipped:      0                                                                                │
+  │ Screenshots:  0                                                                                │
+  │ Video:        false                                                                            │
+  │ Duration:     4 seconds                                                                        │
+  │ Spec Ran:     login/login.ts                                                                   │
+  └────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+────────────────────────────────────────────────────────────────────────────────────────────────────
+
+  Running:  orders/order.dpd.bank.ts                                                        (2 of 6)
+
+
+  FN - DPD delivery with bank transfer
+
+    1) DPD delivery with bank transfer
+
+
+  0 passing (22s)
+  1 failing
+
+  1) FN - DPD delivery with bank transfer DPD delivery with bank transfer:
+     CypressError: Timed out retrying: Expected to find element: '.order-summary__heading-icon', but never found it.
+      at Object.cypressErr (https://designville2014.peckadesign.com/__cypress/runner/cypress_runner.js:86089:11)
+      at Object.throwErr (https://designville2014.peckadesign.com/__cypress/runner/cypress_runner.js:86044:18)
+      at Object.throwErrByPath (https://designville2014.peckadesign.com/__cypress/runner/cypress_runner.js:86076:17)
+      at retry (https://designville2014.peckadesign.com/__cypress/runner/cypress_runner.js:76759:16)
+      at onFailFn (https://designville2014.peckadesign.com/__cypress/runner/cypress_runner.js:65594:16)
+      at tryCatcher (https://designville2014.peckadesign.com/__cypress/runner/cypress_runner.js:120353:23)
+      at Promise._settlePromiseFromHandler (https://designville2014.peckadesign.com/__cypress/runner/cypress_runner.js:118289:31)
+      at Promise._settlePromise (https://designville2014.peckadesign.com/__cypress/runner/cypress_runner.js:118346:18)
+      at Promise._settlePromise0 (https://designville2014.peckadesign.com/__cypress/runner/cypress_runner.js:118391:10)
+      at Promise._settlePromises (https://designville2014.peckadesign.com/__cypress/runner/cypress_runner.js:118466:18)
+      at Async../node_modules/bluebird/js/release/async.js.Async._drainQueue (https://designville2014.peckadesign.com/__cypress/runner/cypress_runner.js:115078:16)
+      at Async../node_modules/bluebird/js/release/async.js.Async._drainQueues (https://designville2014.peckadesign.com/__cypress/runner/cypress_runner.js:115088:10)
+      at Async.drainQueues (https://designville2014.peckadesign.com/__cypress/runner/cypress_runner.js:114962:14)
+
+
+
+
+  (Results)
+
+  ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ Tests:        1                                                                                │
+  │ Passing:      0                                                                                │
+  │ Failing:      1                                                                                │
+  │ Pending:      0                                                                                │
+  │ Skipped:      0                                                                                │
+  │ Screenshots:  1                                                                                │
+  │ Video:        false                                                                            │
+  │ Duration:     22 seconds                                                                       │
+  │ Spec Ran:     orders/order.dpd.bank.ts                                                         │
+  └────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+  (Screenshots)
+
+  -  /Users/ondrejznojil/PhpstormProjects/DesignVille2014/tests/cypress/screenshots/o     (1280x720)
+     rders/order.dpd.bank.ts/FN - DPD delivery with bank transfer -- DPD delivery wit
+     h bank transfer (failed).png
+
+
+────────────────────────────────────────────────────────────────────────────────────────────────────
+
+  Running:  orders/order.ppl.card.ts                                                        (3 of 6)
+
+
+  FN - PDP delivery with credit card
+
+    ✓ PDP delivery with credit card (27209ms)
+
+
+  1 passing (27s)
+
+
+  (Results)
+
+  ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ Tests:        1                                                                                │
+  │ Passing:      1                                                                                │
+  │ Failing:      0                                                                                │
+  │ Pending:      0                                                                                │
+  │ Skipped:      0                                                                                │
+  │ Screenshots:  0                                                                                │
+  │ Video:        false                                                                            │
+  │ Duration:     27 seconds                                                                       │
+  │ Spec Ran:     orders/order.ppl.card.ts                                                         │
+  └────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+────────────────────────────────────────────────────────────────────────────────────────────────────
+
+  Running:  orders/order.ppl.cod.ts                                                         (4 of 6)
+
+
+  FN - PDP delivery with cash on delivery
+
+    1) PDP delivery with cash on delivery
+
+
+  0 passing (24s)
+  1 failing
+
+  1) FN - PDP delivery with cash on delivery PDP delivery with cash on delivery:
+     CypressError: Timed out retrying: Expected to find element: '.order-summary__heading-icon', but never found it.
+      at Object.cypressErr (https://designville2014.peckadesign.com/__cypress/runner/cypress_runner.js:86089:11)
+      at Object.throwErr (https://designville2014.peckadesign.com/__cypress/runner/cypress_runner.js:86044:18)
+      at Object.throwErrByPath (https://designville2014.peckadesign.com/__cypress/runner/cypress_runner.js:86076:17)
+      at retry (https://designville2014.peckadesign.com/__cypress/runner/cypress_runner.js:76759:16)
+      at onFailFn (https://designville2014.peckadesign.com/__cypress/runner/cypress_runner.js:65594:16)
+      at tryCatcher (https://designville2014.peckadesign.com/__cypress/runner/cypress_runner.js:120353:23)
+      at Promise._settlePromiseFromHandler (https://designville2014.peckadesign.com/__cypress/runner/cypress_runner.js:118289:31)
+      at Promise._settlePromise (https://designville2014.peckadesign.com/__cypress/runner/cypress_runner.js:118346:18)
+      at Promise._settlePromise0 (https://designville2014.peckadesign.com/__cypress/runner/cypress_runner.js:118391:10)
+      at Promise._settlePromises (https://designville2014.peckadesign.com/__cypress/runner/cypress_runner.js:118466:18)
+      at Async../node_modules/bluebird/js/release/async.js.Async._drainQueue (https://designville2014.peckadesign.com/__cypress/runner/cypress_runner.js:115078:16)
+      at Async../node_modules/bluebird/js/release/async.js.Async._drainQueues (https://designville2014.peckadesign.com/__cypress/runner/cypress_runner.js:115088:10)
+      at Async.drainQueues (https://designville2014.peckadesign.com/__cypress/runner/cypress_runner.js:114962:14)
+
+
+
+
+  (Results)
+
+  ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ Tests:        1                                                                                │
+  │ Passing:      0                                                                                │
+  │ Failing:      1                                                                                │
+  │ Pending:      0                                                                                │
+  │ Skipped:      0                                                                                │
+  │ Screenshots:  1                                                                                │
+  │ Video:        false                                                                            │
+  │ Duration:     23 seconds                                                                       │
+  │ Spec Ran:     orders/order.ppl.cod.ts                                                          │
+  └────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+  (Screenshots)
+
+  -  /Users/ondrejznojil/PhpstormProjects/DesignVille2014/tests/cypress/screenshots/o     (1280x720)
+     rders/order.ppl.cod.ts/FN - PDP delivery with cash on delivery -- PDP delivery w
+     ith cash on delivery (failed).png
+
+
+────────────────────────────────────────────────────────────────────────────────────────────────────
+
+  Running:  orders/order.store.cash.ts                                                      (5 of 6)
+
+
+  FN - delivery to the branch and playment in cash
+
+    1) Delivery to the branch and playment in cash
+
+
+  0 passing (25s)
+  1 failing
+
+  1) FN - delivery to the branch and playment in cash Delivery to the branch and playment in cash:
+     CypressError: Timed out retrying: Expected to find element: '.order-summary__heading-icon', but never found it.
+      at Object.cypressErr (https://designville2014.peckadesign.com/__cypress/runner/cypress_runner.js:86089:11)
+      at Object.throwErr (https://designville2014.peckadesign.com/__cypress/runner/cypress_runner.js:86044:18)
+      at Object.throwErrByPath (https://designville2014.peckadesign.com/__cypress/runner/cypress_runner.js:86076:17)
+      at retry (https://designville2014.peckadesign.com/__cypress/runner/cypress_runner.js:76759:16)
+      at onFailFn (https://designville2014.peckadesign.com/__cypress/runner/cypress_runner.js:65594:16)
+      at tryCatcher (https://designville2014.peckadesign.com/__cypress/runner/cypress_runner.js:120353:23)
+      at Promise._settlePromiseFromHandler (https://designville2014.peckadesign.com/__cypress/runner/cypress_runner.js:118289:31)
+      at Promise._settlePromise (https://designville2014.peckadesign.com/__cypress/runner/cypress_runner.js:118346:18)
+      at Promise._settlePromise0 (https://designville2014.peckadesign.com/__cypress/runner/cypress_runner.js:118391:10)
+      at Promise._settlePromises (https://designville2014.peckadesign.com/__cypress/runner/cypress_runner.js:118466:18)
+      at Async../node_modules/bluebird/js/release/async.js.Async._drainQueue (https://designville2014.peckadesign.com/__cypress/runner/cypress_runner.js:115078:16)
+      at Async../node_modules/bluebird/js/release/async.js.Async._drainQueues (https://designville2014.peckadesign.com/__cypress/runner/cypress_runner.js:115088:10)
+      at Async.drainQueues (https://designville2014.peckadesign.com/__cypress/runner/cypress_runner.js:114962:14)
+
+
+
+
+  (Results)
+
+  ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ Tests:        1                                                                                │
+  │ Passing:      0                                                                                │
+  │ Failing:      1                                                                                │
+  │ Pending:      0                                                                                │
+  │ Skipped:      0                                                                                │
+  │ Screenshots:  1                                                                                │
+  │ Video:        false                                                                            │
+  │ Duration:     25 seconds                                                                       │
+  │ Spec Ran:     orders/order.store.cash.ts                                                       │
+  └────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+  (Screenshots)
+
+  -  /Users/ondrejznojil/PhpstormProjects/DesignVille2014/tests/cypress/screenshots/o     (1280x720)
+     rders/order.store.cash.ts/FN - delivery to the branch and playment in cash -- De
+     livery to the branch and playment in cash (failed).png
+
+
+────────────────────────────────────────────────────────────────────────────────────────────────────
+
+  Running:  registration/registration.ts                                                    (6 of 6)
+
+
+  FN - user registration
+
+    ✓ User is able to sign up (7897ms)
+
+
+  1 passing (8s)
+
+
+  (Results)
+
+  ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ Tests:        1                                                                                │
+  │ Passing:      1                                                                                │
+  │ Failing:      0                                                                                │
+  │ Pending:      0                                                                                │
+  │ Skipped:      0                                                                                │
+  │ Screenshots:  0                                                                                │
+  │ Video:        false                                                                            │
+  │ Duration:     8 seconds                                                                        │
+  │ Spec Ran:     registration/registration.ts                                                     │
+  └────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+====================================================================================================
+
+  (Run Finished)
+
+
+       Spec                                              Tests  Passing  Failing  Pending  Skipped
+  ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ ✔  login/login.ts                           00:04        1        1        -        -        - │
+  ├────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ ✖  orders/order.dpd.bank.ts                 00:22        1        -        1        -        - │
+  ├────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ ✔  orders/order.ppl.card.ts                 00:27        1        1        -        -        - │
+  ├────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ ✖  orders/order.ppl.cod.ts                  00:23        1        -        1        -        - │
+  ├────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ ✖  orders/order.store.cash.ts               00:25        1        -        1        -        - │
+  ├────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ ✔  registration/registration.ts             00:08        1        1        -        -        - │
+  └────────────────────────────────────────────────────────────────────────────────────────────────┘
+    ✖  all specs passed (100%)                      01:51        6        3        3        -        -
+
