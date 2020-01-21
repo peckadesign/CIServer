@@ -14,7 +14,7 @@ class CypressPresenter extends BasePresenter
 	public function __construct(
 		string $outputDirectory
 	) {
-		parent::__construct();
+		parent::__construct($outputDirectory);
 
 		$this->outputDirectory = $outputDirectory;
 	}
@@ -22,7 +22,7 @@ class CypressPresenter extends BasePresenter
 
 	public function actionOutput(string $id = NULL)
 	{
-		$filename = sprintf("%s/%s.ouput", $this->outputDirectory, $id);
+		$filename = sprintf("%s/%s.cypress", $this->outputDirectory, $id);
 		if ( ! is_readable($filename)) {
 			$this->error();
 		}
