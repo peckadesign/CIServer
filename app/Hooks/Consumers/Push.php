@@ -45,6 +45,11 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 	 */
 	private $statusPublicator;
 
+	/**
+	 * @var \Kdyby\RabbitMq\IProducer
+	 */
+	private $pushProducer;
+
 
 	public function __construct(
 		\Monolog\Logger $logger,
@@ -52,7 +57,8 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 		\CI\GitHub\RepositoriesRepository $repositoriesRepository,
 		\CI\Process\ProcessRunner $processRunner,
 		\Kdyby\Clock\IDateTimeProvider $dateTimeProvider,
-		\CI\Builds\CreateTestServer\StatusPublicator $statusPublicator
+		\CI\Builds\CreateTestServer\StatusPublicator $statusPublicator,
+		\Kdyby\RabbitMq\IProducer $pushProducer
 	) {
 		$this->logger = $logger;
 		$this->createTestServersRepository = $createTestServersRepository;
@@ -60,6 +66,7 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 		$this->processRunner = $processRunner;
 		$this->dateTimeProvider = $dateTimeProvider;
 		$this->statusPublicator = $statusPublicator;
+		$this->pushProducer = $pushProducer;
 	}
 
 
@@ -283,8 +290,9 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 
 			if ($isLocked) {
 				\sleep(5);
+				$this->pushProducer->publish($message->getBody());
 
-				return self::MSG_REJECT_REQUEUE;
+				return self::MSG_ACK;
 			}
 		} catch (\Exception $e) {
 			$this->logger->addError($e->getMessage(), $loggingContext);
