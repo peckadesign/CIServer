@@ -282,6 +282,7 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 					if (isset($lockFile) && \is_readable($lockFile) && ! $isLocked) {
 						$this->logger->addInfo(sprintf('Bude odebrán zámek "%s"', $lockFile), $loggingContext);
 						@\unlink($lockFile);
+						$this->logger->addInfo(\sprintf('Byl odebrán zámek "%s"', $lockFile), $loggingContext);
 					}
 
 					chdir('..');
@@ -318,6 +319,8 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 			$build = $this->createTestServersRepository->persistAndFlush($build);
 			$this->statusPublicator->publish($build);
 		}
+
+		$this->logger->addInfo('Zpracování zprávy dokončeno', $loggingContext);
 
 		return self::MSG_ACK;
 	}
