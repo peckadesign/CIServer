@@ -289,12 +289,14 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 			}
 
 			if ($isLocked) {
+				$this->logger->addInfo('Zpracovávaná zpráva je už zpracovávána jiným conusmerem, zařadí se znovu na konec fronty', $loggingContext);
 				\sleep(5);
 				$this->pushProducer->publish($message->getBody());
 
 				return self::MSG_ACK;
 			}
 		} catch (\Exception $e) {
+			$this->logger->addError('Došlo k chybě při zpracování zprávy, bude vrácena', $loggingContext);
 			$this->logger->addError($e->getMessage(), $loggingContext);
 			if ($build) {
 				$build->updateStart = NULL;
