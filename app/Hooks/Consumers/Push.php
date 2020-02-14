@@ -285,7 +285,12 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 						$this->logger->addInfo(\sprintf('Byl odebrán zámek "%s"', $lockFile), $loggingContext);
 					}
 
-					chdir('..');
+					$changed = \chdir('..');
+					if ($changed) {
+						$this->logger->addInfo('Proběhl návrat do výchozího adresáře projektu', $loggingContext);
+					} else {
+						$this->logger->addError('Nepodařil se návrat do výchozího adresáře', $loggingContext);
+					}
 				}
 			}
 
