@@ -75,7 +75,7 @@ class RouterFactory
 				},
 			],
 		];
-		$router[] = new Nette\Application\Routers\Route('http://test<pullRequestNumber [0-9]+>.<repository [a-zA-Z0-9/]+>.peckadesign.com', $metadata);
+		$router[] = new Nette\Application\Routers\Route('http://test<pullRequestNumber [0-9]+>.<repository [a-zA-Z0-9/\-]+>.peckadesign.com', $metadata);
 
 		return $router;
 	}
