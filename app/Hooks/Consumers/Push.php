@@ -50,6 +50,11 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 	 */
 	private $pushProducer;
 
+	/**
+	 * @var \Kdyby\RabbitMq\IProducer
+	 */
+	private $createTestServerProducer;
+
 
 	public function __construct(
 		\Monolog\Logger $logger,
@@ -58,7 +63,8 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 		\CI\Process\ProcessRunner $processRunner,
 		\Kdyby\Clock\IDateTimeProvider $dateTimeProvider,
 		\CI\Builds\CreateTestServer\StatusPublicator $statusPublicator,
-		\Kdyby\RabbitMq\IProducer $pushProducer
+		\Kdyby\RabbitMq\IProducer $pushProducer,
+		\Kdyby\RabbitMq\IProducer $createTestServerProducer
 	) {
 		$this->logger = $logger;
 		$this->createTestServersRepository = $createTestServersRepository;
@@ -67,6 +73,7 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 		$this->dateTimeProvider = $dateTimeProvider;
 		$this->statusPublicator = $statusPublicator;
 		$this->pushProducer = $pushProducer;
+		$this->createTestServerProducer = $createTestServerProducer;
 	}
 
 
@@ -164,6 +171,12 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 
 			if ( ! is_readable($repositoryName)) {
 				$this->logger->addNotice(sprintf('Repozitář "%s" nebyl na serveru nalezen', $repositoryName), $loggingContext);
+
+				if ($build) {
+					$this->logger->addNotice(sprintf('Do fronty bude zařazen nový pokus o sestavení repositáře "%s" pro větev "%s"', $repositoryName, $branchName), $loggingContext);
+					$this->createTestServerProducer->publish($build->id);
+					return self::MSG_ACK;
+				}
 
 				return self::MSG_REJECT;
 			}
