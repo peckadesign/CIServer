@@ -189,6 +189,7 @@ services:
 		arguments:
 			logger: @Kdyby\Monolog\Logger::channel('push')
 			pushProducer: @\Kdyby\RabbitMq\Connection::getProducer('push')
+			createTestServerProducer: @\Kdyby\RabbitMq\Connection::getProducer('createTestServer')
 		setup:
 			- addOnBuildReady(@CI\Builds\PhpCs\PublishPhpCs)
 			- addOnBuildReady(@CI\Builds\Tests\PublishTests)
