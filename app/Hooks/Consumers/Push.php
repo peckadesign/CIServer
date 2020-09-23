@@ -55,6 +55,11 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 	 */
 	private $createTestServerProducer;
 
+	/**
+	 * @var \CI\SyncLock\PushLockFactory
+	 */
+	private $pushLockFactory;
+
 
 	public function __construct(
 		\Monolog\Logger $logger,
@@ -64,7 +69,8 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 		\Kdyby\Clock\IDateTimeProvider $dateTimeProvider,
 		\CI\Builds\CreateTestServer\StatusPublicator $statusPublicator,
 		\Kdyby\RabbitMq\IProducer $pushProducer,
-		\Kdyby\RabbitMq\IProducer $createTestServerProducer
+		\Kdyby\RabbitMq\IProducer $createTestServerProducer,
+		\CI\SyncLock\PushLockFactory $pushLockFactory
 	) {
 		$this->logger = $logger;
 		$this->createTestServersRepository = $createTestServersRepository;
@@ -74,6 +80,7 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 		$this->statusPublicator = $statusPublicator;
 		$this->pushProducer = $pushProducer;
 		$this->createTestServerProducer = $createTestServerProducer;
+		$this->pushLockFactory = $pushLockFactory;
 	}
 
 
@@ -217,20 +224,23 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 			$isLocked = FALSE;
 
 			foreach ($instances as $instanceDirectory) {
+				$this->logger->addInfo(sprintf('Byla nalezena instance "%s"', $instanceDirectory), $loggingContext);
+
+				chdir($instanceDirectory);
+
+				$cwd = sprintf("%s/%s/%s", $repositoryPath, $repositoryName, $instanceDirectory);
+				$lockFile = $cwd . '/push.lock';
+				$pushLock = $this->pushLockFactory->create($lockFile);
+
+				if ( ! $pushLock->checkAndLock(new \DateTimeImmutable())) {
+					$this->logger->addInfo(sprintf('Instance "%s" se již zpracovává paralelně', $instanceDirectory), $loggingContext);
+					$isLocked = TRUE;
+					break;
+				} else {
+					$this->logger->addInfo(sprintf('Pro instanci "%s" byl vytvořen zámek', $instanceDirectory), $loggingContext);
+				}
+
 				try {
-					$this->logger->addInfo(sprintf('Byla nalezena instance "%s"', $instanceDirectory), $loggingContext);
-
-					chdir($instanceDirectory);
-
-					$cwd = sprintf("%s/%s/%s", $repositoryPath, $repositoryName, $instanceDirectory);
-					$lockFile = $cwd . '/push.lock';
-
-					if (\file_exists($lockFile)) {
-						$this->logger->addInfo(sprintf('Instance "%s" se již zpracovává paralelně', $instanceDirectory), $loggingContext);
-						$isLocked = TRUE;
-						break;
-					}
-
 					try {
 						$currentBranch = $this->processRunner->runProcess($this->logger, $cwd, 'git symbolic-ref --short HEAD', $loggingContext);
 						$this->logger->addInfo('Větev instance je "' . $currentBranch . '"', $loggingContext);
@@ -292,10 +302,13 @@ class Push implements \Kdyby\RabbitMq\IConsumer
 					}
 					continue;
 				} finally {
-					if (isset($lockFile) && \is_readable($lockFile) && ! $isLocked) {
-						$this->logger->addInfo(sprintf('Bude odebrán zámek "%s"', $lockFile), $loggingContext);
-						@\unlink($lockFile);
+					$this->logger->addInfo(sprintf('Bude odebrán zámek "%s"', $lockFile), $loggingContext);
+					$releaseResult = $pushLock->releaseLock();
+
+					if ($releaseResult) {
 						$this->logger->addInfo(\sprintf('Byl odebrán zámek "%s"', $lockFile), $loggingContext);
+					} else {
+						$this->logger->addInfo(\sprintf('Nepodařilo se odebrat zámek "%s"', $lockFile), $loggingContext);
 					}
 
 					$changed = \chdir('..');
