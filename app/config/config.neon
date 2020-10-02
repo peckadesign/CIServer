@@ -356,3 +356,6 @@ services:
 	-
 		class: \League\OAuth2\Client\Provider\Github
 		factory: \CI\GitHub\ProviderFactory(%github.clientId%, %github.clientSecret%, %github.scope%)::create()
+
+	syncLock.pushLockFactory:
+		factory: CI\SyncLock\PushLockFactory
