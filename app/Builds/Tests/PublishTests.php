@@ -34,7 +34,7 @@ class PublishTests implements \CI\Builds\IOnBuildReady
 	) {
 		$cwd = $this->buildLocator->getPath($repository->name, $createTestServer ? $createTestServer->pullRequestNumber : NULL);
 
-		if (is_readable($cwd . '/Makefile') && ($content = file_get_contents($cwd . '/Makefile')) && strpos($content, 'run-tests:') === 0) {
+		if (is_readable($cwd . '/Makefile') && ($content = file_get_contents($cwd . '/Makefile')) && \preg_match('~\nrun-tests:~', $content)) {
 			$builtCommit = new \CI\Builds\BuiltCommit($repository->id, $createTestServer ? $createTestServer->id : NULL, $commit);
 			$publishData = \Nette\Utils\Json::encode($builtCommit);
 			$logger->addInfo('Sestavení obsahuje testy, budou spuštěny: ' . $publishData, ['commit' => $commit]);
