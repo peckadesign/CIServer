@@ -20,22 +20,32 @@ class StatusPublicator
 	 */
 	private $statusPublicator;
 
+	private Kdyby\Clock\IDateTimeProvider $dateTimeProvider;
+
 
 	public function __construct(
 		Nette\Application\LinkGenerator $linkGenerator,
-		CI\GitHub\StatusPublicator $statusPublicator
+		CI\GitHub\StatusPublicator $statusPublicator,
+		\Kdyby\Clock\IDateTimeProvider $dateTimeProvider
 	) {
 		$this->linkGenerator = $linkGenerator;
 		$this->statusPublicator = $statusPublicator;
+		$this->dateTimeProvider = $dateTimeProvider;
 	}
 
 
 	/**
 	 * @throws CI\Exception
 	 */
-	public function publish(CI\GitHub\Repository $repository, string $commit, CI\PhpCs\PhpCs $phpCs)
+	public function publish(CI\GitHub\Repository $repository, string $commit, ?CI\PhpCs\PhpCs $phpCs)
 	{
-		if ( ! $phpCs->getErrors() && ! $phpCs->getWarnings()) {
+		if ($phpCs === NULL) {
+			$message = \sprintf(
+				'Běží od %s',
+				\CI\Utils\Helpers::dateTime($this->dateTimeProvider->getDateTime())
+			);
+			$state = 'pending';
+		} elseif ( ! $phpCs->getErrors() && ! $phpCs->getWarnings()) {
 			$message = 'Bez chyb';
 			$state = 'success';
 		} else {

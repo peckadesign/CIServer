@@ -114,6 +114,8 @@ class PhpStan implements \Kdyby\RabbitMq\IConsumer
 
 			$success = TRUE;
 
+			$this->statusPublicator->publish($repository, $currentCommit, NULL);
+
 			$this->processRunner->runProcess($this->logger, $instancePath, 'HOME=/home/' . get_current_user() . ' COMPOSE_INTERACTIVE_NO_CLI=1 make phpstan', $loggingContext);
 
 			$outputFilename = $instancePath . '/output.phpstan';
