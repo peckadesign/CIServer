@@ -34,7 +34,7 @@ class PublishPhpCs implements \CI\Builds\IOnBuildReady
 	) {
 		$cwd = $this->buildLocator->getPath($repository->name, $createTestServer ? $createTestServer->pullRequestNumber : NULL);
 
-		if (is_readable($cwd . '/Makefile') && ($content = file_get_contents($cwd . '/Makefile')) && strpos($content, 'cs:') !== FALSE) {
+		if (is_readable($cwd . '/Makefile') && ($content = file_get_contents($cwd . '/Makefile')) && strpos($content, 'cs:') === 0) {
 			$builtCommit = new \CI\Builds\BuiltCommit($repository->id, $createTestServer ? $createTestServer->id : NULL, $commit);
 			$publishData = \Nette\Utils\Json::encode($builtCommit);
 			$logger->addInfo('Sestavení obsahuje coding standard, bude spuštěn: ' . $publishData, ['commit' => $commit]);
