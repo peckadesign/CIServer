@@ -15,19 +15,25 @@ final class LoginPresenter extends \Nette\Application\UI\Presenter
 	 */
 	private $users;
 
+	private \Psr\Log\LoggerInterface $logger;
+
 
 	public function __construct(
 		\League\OAuth2\Client\Provider\Github $gitHub,
-		\CI\User\UsersRepository $users
+		\CI\User\UsersRepository $users,
+		\Psr\Log\LoggerInterface $logger
 	) {
 		parent::__construct();
 		$this->github = $gitHub;
 		$this->users = $users;
+		$this->logger = $logger;
 	}
 
 
 	public function actionDefault(string $code, string $state): void
 	{
+		$this->logger->debug('Proběhne přihlášení přes GitHub: $code = ' . $code . ', $state = ' . $state);
+
 		try {
 			$token = $this->github->getAccessToken('authorization_code', [
 				'code' => $code,
@@ -35,6 +41,8 @@ final class LoginPresenter extends \Nette\Application\UI\Presenter
 
 			/** @var \League\OAuth2\Client\Provider\GithubResourceOwner $gitHubUser */
 			$gitHubUser = $this->github->getResourceOwner($token);
+
+			$this->logger->debug('Uživatel pro přihlášení: $id = ' . $gitHubUser->getId() . ', $email = ' . $gitHubUser->getEmail() . ', $token = ' . $token->getToken());
 
 			$conditions = [
 				'gitHubId' => $gitHubUser->getId(),
