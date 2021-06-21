@@ -49,6 +49,7 @@ final class LoginPresenter extends \Nette\Application\UI\Presenter
 			$this->users->persistAndFlush($user);
 
 			$this->getUser()->login($user);
+			$this->flashMessage('Přihlášení přes GitHub proběhlo úspěšně', \CI\DashBoard\Presenters\BasePresenter::FLASH_MESSAGE_SUCCESS);
 		} catch (\Throwable $e) {
 			$this->flashMessage('Přihlášení přes GitHub selhalo', \CI\DashBoard\Presenters\BasePresenter::FLASH_MESSAGE_ERROR);
 		}
