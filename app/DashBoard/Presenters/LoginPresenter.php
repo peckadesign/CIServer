@@ -31,22 +31,18 @@ final class LoginPresenter extends \Nette\Application\UI\Presenter
 	 */
 	private $backLinkStorage;
 
-	private \Psr\Log\LoggerInterface $logger;
-
 
 	public function __construct(
 		\CI\User\UsersRepository $users,
 		\CI\OAuth2Login\PeckaNotesProvider $authProvider,
 		\CI\OAuth2Login\StateStorage $stateStorage,
-		\CI\OAuth2Login\Login\BackLinkStorage $backLinkStorage,
-		\Psr\Log\LoggerInterface $logger
+		\CI\OAuth2Login\Login\BackLinkStorage $backLinkStorage
 	) {
 		parent::__construct();
 		$this->users = $users;
 		$this->authProvider = $authProvider;
 		$this->stateStorage = $stateStorage;
 		$this->backLinkStorage = $backLinkStorage;
-		$this->logger = $logger;
 	}
 
 
@@ -56,8 +52,6 @@ final class LoginPresenter extends \Nette\Application\UI\Presenter
 
 		$this->stateStorage->saveState($this->authProvider->getState());
 		$this->backLinkStorage->saveBackLink($this->backLink);
-
-		$this->logger->debug('Dojde k přesměrování pro přihlášení s GitHubem: $authorizationUrl = ' . $authorizationUrl . ', $state = ' . $this->authProvider->getState());
 
 		$this->redirectUrl($authorizationUrl);
 	}

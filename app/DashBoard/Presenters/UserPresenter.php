@@ -24,15 +24,19 @@ class UserPresenter extends BasePresenter
 	 */
 	public $backLink;
 
+	private \Psr\Log\LoggerInterface $logger;
+
 
 	public function __construct(
 		CI\User\UsersRepository $usersRepository,
-		\League\OAuth2\Client\Provider\Github $gitHub
+		\League\OAuth2\Client\Provider\Github $gitHub,
+		\Psr\Log\LoggerInterface $logger
 	) {
 		parent::__construct();
 
 		$this->usersRepository = $usersRepository;
 		$this->gitHub = $gitHub;
+		$this->logger = $logger;
 	}
 
 
@@ -58,6 +62,7 @@ class UserPresenter extends BasePresenter
 	{
 		if ($this->user->isLoggedIn()) {
 			$authUrl = $this->gitHub->getAuthorizationUrl(['state' => $this->storeRequest()]);
+			$this->logger->debug('Dojde k přesměrování pro přihlášení s GitHubem: $authUrl = ' . $authUrl);
 			$this->redirectUrl($authUrl);
 		}
 	}
