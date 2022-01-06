@@ -19,7 +19,7 @@
 		"nette/forms": "2.4.*",
 		"nette/utils": "2.5.*",
 		"nette/di": "~2.4.16",
-		"latte/latte": "~2.5.3",
+		"latte/latte": "~2.10.6",
 		"tracy/tracy": "2.4.*",
 		"nextras/orm": "3.1.*",
 		"nextras/migrations": "3.0.*",
