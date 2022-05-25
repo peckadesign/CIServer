@@ -26,7 +26,7 @@
 		"nextras/datagrid": "3.0.*",
 		"symfony/process": "4.2.*",
 		"kdyby/console": "2.7.*",
-		"guzzlehttp/guzzle": "6.3.*",
+		"guzzlehttp/guzzle": "6.5.*",
 		"league/oauth2-github": "2.0.*",
 		"kdyby/monolog": "1.3.*",
 		"kdyby/clock": "1.0.*",
